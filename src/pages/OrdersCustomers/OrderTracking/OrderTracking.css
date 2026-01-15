@@ -1,0 +1,82 @@
+.order-tracking-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-table thead {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.order-table th {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.order-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.order-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.order-table td {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+}
+
+.order-id {
+  font-weight: 500;
+  color: #2563eb;
+}
+
+.order-customer {
+  color: #111827;
+}
+
+.order-total {
+  color: #111827;
+  font-weight: 600;
+}
+
+.status-delivered {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-shipped {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-processing {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-pending {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.btn-download {
+  color: #059669;
+  background-color: transparent;
+}
+
+.btn-download:hover {
+  background-color: #d1fae5;
+}

@@ -1,0 +1,252 @@
+.recent-activity-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.activity-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-item:hover {
+  background-color: #f9fafb;
+}
+
+.activity-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.activity-new .activity-icon {
+  background-color: #dbeafe;
+}
+
+.activity-updated .activity-icon {
+  background-color: #fef3c7;
+}
+
+.activity-shipped .activity-icon {
+  background-color: #d1fae5;
+}
+
+.activity-alert .activity-icon {
+  background-color: #fee2e2;
+}
+
+.activity-default .activity-icon {
+  background-color: #f3f4f6;
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.activity-message {
+  margin: 0;
+  color: #111827;
+  font-weight: 500;
+}
+
+.activity-time {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Status-specific styles */
+.activity-new {
+  border-left: 3px solid #3b82f6;
+}
+
+.activity-updated {
+  border-left: 3px solid #f59e0b;
+}
+
+.activity-shipped {
+  border-left: 3px solid #10b981;
+}
+
+.activity-alert {
+  border-left: 3px solid #ef4444;
+}
+
+/* Activity Stats Summary */
+.activity-stats {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .activity-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .activity-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-box {
+  background-color: white;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-box-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-box-icon.orders {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.stat-box-icon.products {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.stat-box-icon.customers {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.stat-box-icon.alerts {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.stat-box-content {
+  flex: 1;
+}
+
+.stat-box-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.stat-box-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Filter Controls */
+.activity-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background-color: #f9fafb;
+}
+
+.filter-btn.active {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* Load More Button */
+.load-more-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more-btn:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state-text {
+  margin: 0;
+}
+

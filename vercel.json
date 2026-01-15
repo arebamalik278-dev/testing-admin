@@ -21,7 +21,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://af-mart828.vercel.app/:path*" },
+    { "source": "/api/:path*", "destination": "https://backendtestin.vercel.app/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

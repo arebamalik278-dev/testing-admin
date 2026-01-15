@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://afmartbackend.vercel.app/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backendtestin.vercel.app/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');

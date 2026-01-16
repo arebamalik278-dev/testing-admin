@@ -92,23 +92,34 @@ const api = {
   // Login specific method
   login: async (email, password) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/admins/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+      
+      // Get response text first to check if it's JSON
+      const responseText = await response.text();
+      
+      try {
+        // Try to parse as JSON
+        const data = JSON.parse(responseText);
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Login failed');
+        }
+        
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data));
+        }
+        return data;
+      } catch (parseError) {
+        // If not JSON, throw error with the response text
+        throw new Error(`Server error: ${responseText.substring(0, 100)}...`);
       }
-      const data = await response.json();
-      if (data.success && data.data.token) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data));
-      }
-      return data;
     } catch (error) {
       console.error('API Login Error:', error);
       throw error;

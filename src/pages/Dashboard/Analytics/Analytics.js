@@ -19,10 +19,10 @@ const Analytics = () => {
   const metrics = [
     {
       label: 'Total Revenue',
-      value: '$124,563',
+      value: 'pkr124,563',
       change: '+12.5%',
       trend: 'up',
-      target: '$150,000',
+      target: 'pkr150,000',
       progress: 83,
       icon: DollarSign,
       color: 'blue'
@@ -39,20 +39,20 @@ const Analytics = () => {
     },
     {
       label: 'Avg Order Value',
-      value: '$127.50',
+      value: 'pkr127.50',
       change: '-2.1%',
       trend: 'down',
-      target: '$140.00',
+      target: 'pkr140.00',
       progress: 91,
       icon: ShoppingCart,
       color: 'purple'
     },
     {
       label: 'Customer Lifetime Value',
-      value: '$458.00',
+      value: 'pkr458.00',
       change: '+5.4%',
       trend: 'up',
-      target: '$500.00',
+      target: 'pkr500.00',
       progress: 92,
       icon: Users,
       color: 'orange'
@@ -217,17 +217,17 @@ const Analytics = () => {
                 </defs>
 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                 <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                <YAxis yAxisId="left" stroke="#6b7280" fontSize={12} tickFormatter={(value) => `$${(value/1000)}k`} />
+                <YAxis yAxisId="left" stroke="#6b7280" fontSize={12} tickFormatter={(value) => `pkr${(value/1000)}k`} />
                 <YAxis yAxisId="right" orientation="right" stroke="#6b7280" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '0.5rem',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                   formatter={(value, name) => [
-                    name === 'revenue' ? `$${value.toLocaleString()}` : value,
+                    name === 'revenue' ? `pkr${value.toLocaleString()}` : value,
                     name === 'revenue' ? 'Revenue' : 'Orders'
                   ]}
                 />
@@ -310,14 +310,14 @@ const Analytics = () => {
               <BarChart data={weeklyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                 <XAxis dataKey="day" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `$${(value/1000)}k`} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
+                <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `pkr${(value/1000)}k`} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '0.5rem'
                   }}
-                  formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']}
+                  formatter={(value) => [`pkr${value.toLocaleString()}`, 'Revenue']}
                 />
                 <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>

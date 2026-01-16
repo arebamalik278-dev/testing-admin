@@ -60,7 +60,7 @@ const OrderTracking = () => {
                   <td className="order-customer">{order.customer}</td>
                   <td className="text-gray">{order.date}</td>
                   <td className="text-gray">{order.items} items</td>
-                  <td className="order-total">${order.total}</td>
+                  <td className="order-total">{`pkr${order.total}`}</td>
                   <td>
                     <span className={`status-badge ${getStatusClass(order.status)}`}>
                       {order.status}

@@ -109,7 +109,7 @@ const Invoicing = () => {
             <DollarSign size={20} />
           </div>
           <div className="summary-content">
-            <p className="summary-value">${summaryStats.totalAmount.toLocaleString()}</p>
+            <p className="summary-value">{`pkr${summaryStats.totalAmount.toLocaleString()}`}</p>
             <p className="summary-label">Total Amount</p>
           </div>
         </div>
@@ -118,7 +118,7 @@ const Invoicing = () => {
             <Clock size={20} />
           </div>
           <div className="summary-content">
-            <p className="summary-value">${summaryStats.pendingAmount.toLocaleString()}</p>
+            <p className="summary-value">{`pkr${summaryStats.pendingAmount.toLocaleString()}`}</p>
             <p className="summary-label">Pending Payment</p>
           </div>
         </div>
@@ -127,7 +127,7 @@ const Invoicing = () => {
             <XCircle size={20} />
           </div>
           <div className="summary-content">
-            <p className="summary-value">${summaryStats.overdueAmount.toLocaleString()}</p>
+            <p className="summary-value">{`pkr${summaryStats.overdueAmount.toLocaleString()}`}</p>
             <p className="summary-label">Overdue Amount</p>
           </div>
         </div>
@@ -194,7 +194,7 @@ const Invoicing = () => {
                   <td>{invoice.date}</td>
                   <td>{invoice.dueDate}</td>
                   <td>
-                    <span className="amount">${invoice.amount.toLocaleString()}</span>
+                    <span className="amount">{`pkr${invoice.amount.toLocaleString()}`}</span>
                   </td>
                   <td>{getStatusBadge(invoice.status)}</td>
                   <td>
@@ -266,8 +266,8 @@ const Invoicing = () => {
                       <tr key={index}>
                         <td>{item.description}</td>
                         <td>{item.quantity}</td>
-                        <td>${item.price.toLocaleString()}</td>
-                        <td>${(item.quantity * item.price).toLocaleString()}</td>
+                        <td>{`pkr${item.price.toLocaleString()}`}</td>
+                        <td>{`pkr${(item.quantity * item.price).toLocaleString()}`}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -277,15 +277,15 @@ const Invoicing = () => {
               <div className="invoice-summary">
                 <div className="summary-row">
                   <span>Subtotal:</span>
-                  <span>${selectedInvoice.amount.toLocaleString()}</span>
+                  <span>{`pkr${selectedInvoice.amount.toLocaleString()}`}</span>
                 </div>
                 <div className="summary-row">
                   <span>Tax (0%):</span>
-                  <span>$0.00</span>
+                  <span>pkr0.00</span>
                 </div>
                 <div className="summary-row total">
                   <span>Total:</span>
-                  <span>${selectedInvoice.amount.toLocaleString()}</span>
+                  <span>{`pkr${selectedInvoice.amount.toLocaleString()}`}</span>
                 </div>
               </div>
             </div>

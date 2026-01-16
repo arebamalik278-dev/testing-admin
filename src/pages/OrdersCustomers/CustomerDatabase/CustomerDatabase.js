@@ -203,7 +203,7 @@ const CustomerDatabase = () => {
             <Users size={20} />
           </div>
           <div className="summary-content">
-            <p className="summary-value">${summaryStats.totalRevenue.toLocaleString()}</p>
+            <p className="summary-value">{`pkr${summaryStats.totalRevenue.toLocaleString()}`}</p>
             <p className="summary-label">Total Revenue</p>
           </div>
         </div>
@@ -282,7 +282,7 @@ const CustomerDatabase = () => {
                     <span className="orders-cell">{customer.orders}</span>
                   </td>
                   <td>
-                    <span className="spent-cell">${customer.totalSpent.toLocaleString()}</span>
+                    <span className="spent-cell">{`pkr${customer.totalSpent.toLocaleString()}`}</span>
                   </td>
                   <td>{getStatusBadge(customer.status)}</td>
                   <td>
@@ -380,7 +380,7 @@ const CustomerDatabase = () => {
                 </div>
                 <div className="stat-card">
                   <Calendar size={20} />
-                  <p className="stat-value">${selectedCustomer.totalSpent.toLocaleString()}</p>
+                  <p className="stat-value">{`pkr${selectedCustomer.totalSpent.toLocaleString()}`}</p>
                   <p className="stat-label">Total Spent</p>
                 </div>
               </div>

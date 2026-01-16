@@ -17,7 +17,7 @@ const Overview = () => {
   const stats = [
     {
       label: 'Total Revenue',
-      value: '$124,563',
+      value: 'pkr124,563',
       change: '+12.5%',
       trend: 'up',
       icon: DollarSign,
@@ -71,20 +71,20 @@ const Overview = () => {
 
   // Recent orders
   const recentOrders = [
-    { id: '#1234', customer: 'John Doe', product: 'iPhone 15 Pro', amount: '$999', status: 'completed', date: '2 hours ago' },
-    { id: '#1235', customer: 'Jane Smith', product: 'MacBook Air', amount: '$1,299', status: 'processing', date: '3 hours ago' },
-    { id: '#1236', customer: 'Bob Wilson', product: 'AirPods Pro', amount: '$249', status: 'pending', date: '5 hours ago' },
-    { id: '#1237', customer: 'Alice Brown', product: 'iPad Mini', amount: '$599', status: 'completed', date: '6 hours ago' },
-    { id: '#1238', customer: 'Charlie Davis', product: 'Watch Ultra', amount: '$799', status: 'delivered', date: '8 hours ago' }
+    { id: '#1234', customer: 'John Doe', product: 'iPhone 15 Pro', amount: 'pkr999', status: 'completed', date: '2 hours ago' },
+    { id: '#1235', customer: 'Jane Smith', product: 'MacBook Air', amount: 'pkr1,299', status: 'processing', date: '3 hours ago' },
+    { id: '#1236', customer: 'Bob Wilson', product: 'AirPods Pro', amount: 'pkr249', status: 'pending', date: '5 hours ago' },
+    { id: '#1237', customer: 'Alice Brown', product: 'iPad Mini', amount: 'pkr599', status: 'completed', date: '6 hours ago' },
+    { id: '#1238', customer: 'Charlie Davis', product: 'Watch Ultra', amount: 'pkr799', status: 'delivered', date: '8 hours ago' }
   ];
 
   // Top products
   const topProducts = [
-    { id: 1, name: 'iPhone 15 Pro', sales: 234, revenue: '$234,000', trend: '+15%' },
-    { id: 2, name: 'MacBook Air M2', sales: 189, revenue: '$245,000', trend: '+8%' },
-    { id: 3, name: 'AirPods Pro', sales: 456, revenue: '$113,000', trend: '+22%' },
-    { id: 4, name: 'iPad Pro', sales: 167, revenue: '$167,000', trend: '+5%' },
-    { id: 5, name: 'Apple Watch', sales: 234, revenue: '$70,000', trend: '+12%' }
+    { id: 1, name: 'iPhone 15 Pro', sales: 234, revenue: 'pkr234,000', trend: '+15%' },
+    { id: 2, name: 'MacBook Air M2', sales: 189, revenue: 'pkr245,000', trend: '+8%' },
+    { id: 3, name: 'AirPods Pro', sales: 456, revenue: 'pkr113,000', trend: '+22%' },
+    { id: 4, name: 'iPad Pro', sales: 167, revenue: 'pkr167,000', trend: '+5%' },
+    { id: 5, name: 'Apple Watch', sales: 234, revenue: 'pkr70,000', trend: '+12%' }
   ];
 
   const getStatusClass = (status) => {
@@ -178,15 +178,15 @@ const Overview = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `$${value}`} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
+                <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `pkr${value}`} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '0.5rem',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
-                  formatter={(value) => [`$${value}`, '']}
+                  formatter={(value) => [`pkr${value}`, '']}
                 />
                 <Area 
                   type="monotone" 

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Menu, Search, Bell, User, ChevronDown, LogOut, Settings, HelpCircle } from 'lucide-react';
+import { Menu, Search, Bell, User, ChevronDown, Settings, HelpCircle } from 'lucide-react';
 import './Navbar.css';
 
-const Navbar = ({ setIsMobileOpen, user, onLogout }) => {
+const Navbar = ({ setIsMobileOpen }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,17 +19,6 @@ const Navbar = ({ setIsMobileOpen, user, onLogout }) => {
     e.preventDefault();
     console.log('Search:', searchQuery);
   };
-
-  const handleLogout = () => {
-    setShowUserMenu(false);
-    if (onLogout) {
-      onLogout();
-    }
-  };
-
-  // Get user display name
-  const userName = user?.name || user?.email?.split('@')[0] || 'Admin';
-  const userEmail = user?.email || 'admin@afmart.com';
 
   return (
     <header className="navbar">
@@ -108,7 +97,7 @@ const Navbar = ({ setIsMobileOpen, user, onLogout }) => {
             <div className="user-avatar">
               <User size={18} />
             </div>
-            <span className="user-name">{userName}</span>
+            <span className="user-name">Admin</span>
             <ChevronDown size={16} className={`chevron ${showUserMenu ? 'rotate' : ''}`} />
           </button>
 
@@ -119,8 +108,8 @@ const Navbar = ({ setIsMobileOpen, user, onLogout }) => {
                   <User size={24} />
                 </div>
                 <div className="user-info">
-                  <span className="user-dropdown-name">{userName}</span>
-                  <span className="user-dropdown-email">{userEmail}</span>
+                  <span className="user-dropdown-name">Admin</span>
+                  <span className="user-dropdown-email">admin@afmart.com</span>
                 </div>
               </div>
               <div className="user-dropdown-divider"></div>
@@ -138,14 +127,6 @@ const Navbar = ({ setIsMobileOpen, user, onLogout }) => {
                   <span>Help & Support</span>
                 </button>
               </div>
-              <div className="user-dropdown-divider"></div>
-              <button 
-                className="user-dropdown-item logout"
-                onClick={handleLogout}
-              >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </button>
             </div>
           )}
         </div>

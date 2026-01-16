@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar/Sidebar';
 import Navbar from './components/Navbar/Navbar';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
-import api from './api/api';
 
 // Dashboard Pages
 import Overview from './pages/Dashboard/Overview/Overview';
@@ -27,22 +26,13 @@ import Settings from './pages/SiteConfig/Settings/Settings';
 import BannersCarousels from './pages/SiteConfig/BannersCarousels/BannersCarousels';
 import PaymentShipping from './pages/SiteConfig/PaymentShipping/PaymentShipping';
 
-// Auth Pages
-import Login from './pages/Login/Login';
-
 import './App.css';
 
 // Main App Layout Component
 const AppLayout = () => {
   const [currentPage, setCurrentPage] = useState('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
-
-  const handleLogout = () => {
-    api.logout();
-    navigate('/login');
-  };
 
   const handlePageChange = (pageId) => {
     setCurrentPage(pageId);
@@ -104,9 +94,7 @@ const AppLayout = () => {
       />
       <div className="main-content">
         <Navbar 
-          setIsMobileOpen={setIsMobileOpen} 
-          user={api.getCurrentUser()}
-          onLogout={handleLogout}
+          setIsMobileOpen={setIsMobileOpen}
         />
         <main className="page-content">
           {renderPage()}
@@ -116,57 +104,11 @@ const AppLayout = () => {
   );
 };
 
-// Login Page Component
-const LoginPage = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = location.state?.from?.pathname || '/';
-
-  const handleLogin = async (email, password) => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await api.login(email, password);
-      
-      if (response.success) {
-        // Check if user is admin
-        const user = api.getCurrentUser();
-        if (user && (user.role === 'admin' || user.role === 'user')) {
-          navigate(from, { replace: true });
-        } else {
-          setError('Access denied. Admin privileges required.');
-        }
-      } else {
-        setError(response.message || 'Login failed');
-      }
-    } catch (err) {
-      setError(err.message || 'Network error. Please check your connection.');
-      console.error('Login error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // If already logged in, redirect to dashboard
-  if (api.isAuthenticated()) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <Login onLogin={handleLogin} loading={loading} error={error} />;
-};
-
 // Main App Component
 const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Login Route */}
-        <Route path="/login" element={<LoginPage />} /> 
-
         {/* Protected Routes */}
         <Route
           path="/*"

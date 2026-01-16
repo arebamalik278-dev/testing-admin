@@ -20,9 +20,9 @@ const TopProducts = () => {
       sku: 'IPP-001',
       category: 'Electronics',
       image: 'https://via.placeholder.com/80x80/3b82f6/ffffff?text=iPhone',
-      price: 999,
+      price: 279999,
       sales: 234,
-      revenue: 234000,
+      revenue: 65640000,
       trend: '+15.2%',
       trendDirection: 'up',
       rating: 4.8,
@@ -36,9 +36,9 @@ const TopProducts = () => {
       sku: 'MBA-002',
       category: 'Electronics',
       image: 'https://via.placeholder.com/80x80/10b981/ffffff?text=MacBook',
-      price: 1099,
+      price: 309999,
       sales: 189,
-      revenue: 207000,
+      revenue: 58590000,
       trend: '+8.7%',
       trendDirection: 'up',
       rating: 4.9,
@@ -52,9 +52,9 @@ const TopProducts = () => {
       sku: 'APP-003',
       category: 'Audio',
       image: 'https://via.placeholder.com/80x80/8b5cf6/ffffff?text=AirPods',
-      price: 249,
+      price: 69999,
       sales: 456,
-      revenue: 113000,
+      revenue: 31920000,
       trend: '+22.1%',
       trendDirection: 'up',
       rating: 4.7,
@@ -68,9 +68,9 @@ const TopProducts = () => {
       sku: 'IPP-004',
       category: 'Tablets',
       image: 'https://via.placeholder.com/80x80/f59e0b/ffffff?text=iPad',
-      price: 1099,
+      price: 309999,
       sales: 167,
-      revenue: 183000,
+      revenue: 51770000,
       trend: '+5.3%',
       trendDirection: 'up',
       rating: 4.6,
@@ -84,9 +84,9 @@ const TopProducts = () => {
       sku: 'AWU-005',
       category: 'Wearables',
       image: 'https://via.placeholder.com/80x80/ef4444/ffffff?text=Watch',
-      price: 799,
+      price: 224999,
       sales: 145,
-      revenue: 116000,
+      revenue: 32625000,
       trend: '+12.8%',
       trendDirection: 'up',
       rating: 4.5,
@@ -100,9 +100,9 @@ const TopProducts = () => {
       sku: 'SWH-006',
       category: 'Audio',
       image: 'https://via.placeholder.com/80x80/06b6d4/ffffff?text=Sony',
-      price: 349,
+      price: 98999,
       sales: 178,
-      revenue: 62100,
+      revenue: 17622000,
       trend: '-3.2%',
       trendDirection: 'down',
       rating: 4.4,
@@ -116,9 +116,9 @@ const TopProducts = () => {
       sku: 'NSO-007',
       category: 'Gaming',
       image: 'https://via.placeholder.com/80x80/ec4899/ffffff?text=Switch',
-      price: 349,
+      price: 98999,
       sales: 134,
-      revenue: 46800,
+      revenue: 13266000,
       trend: '+18.9%',
       trendDirection: 'up',
       rating: 4.3,
@@ -132,9 +132,9 @@ const TopProducts = () => {
       sku: 'SGS-008',
       category: 'Electronics',
       image: 'https://via.placeholder.com/80x80/6366f1/ffffff?text=Galaxy',
-      price: 849,
+      price: 239999,
       sales: 123,
-      revenue: 104000,
+      revenue: 29520000,
       trend: '+7.1%',
       trendDirection: 'up',
       rating: 4.2,
@@ -293,7 +293,7 @@ const TopProducts = () => {
                 <div className="product-stats">
                   <div className="stat-item">
                     <span className="stat-label">Price</span>
-                    <span className="stat-value">${product.price}</span>
+                    <span className="stat-value">Rs {product.price.toLocaleString()}</span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Sales</span>
@@ -301,7 +301,7 @@ const TopProducts = () => {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Revenue</span>
-                    <span className="stat-value">${product.revenue.toLocaleString()}</span>
+                    <span className="stat-value">Rs {product.revenue.toLocaleString()}</span>
                   </div>
                 </div>
                 <div className="product-footer">
@@ -358,9 +358,9 @@ const TopProducts = () => {
                       {product.category}
                     </span>
                   </td>
-                  <td className="price-cell">${product.price}</td>
+                  <td className="price-cell">Rs {product.price.toLocaleString()}</td>
                   <td>{product.sales.toLocaleString()}</td>
-                  <td className="revenue-cell">${product.revenue.toLocaleString()}</td>
+                  <td className="revenue-cell">Rs {product.revenue.toLocaleString()}</td>
                   <td>
                     <span className={`trend-badge ${product.trendDirection}`}>
                       {product.trendDirection === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}

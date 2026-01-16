@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   ShoppingCart, User, Package, DollarSign, AlertTriangle, 
-  TrendingUp, Clock, Filter, Download, Search, ChevronDown
+  TrendingUp, Clock, Filter, Download, Search, ChevronDown,
+  ArrowUpRight, ArrowDownRight, Users, ShoppingBag, AlertCircle, RefreshCw
 } from 'lucide-react';
 import './RecentActivity.css';
 
@@ -9,7 +10,7 @@ const RecentActivity = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Activity data
+  // Activity data with Pakistani Rupees
   const activities = [
     {
       id: 1,
@@ -18,7 +19,7 @@ const RecentActivity = () => {
       iconColor: 'blue',
       title: 'New Order Received',
       description: 'Order #1234 placed by John Doe',
-      amount: '$999.00',
+      amount: 'Rs 279,999',
       time: '2 minutes ago',
       read: false
     },
@@ -48,7 +49,7 @@ const RecentActivity = () => {
       icon: DollarSign,
       iconColor: 'teal',
       title: 'Payment Received',
-      description: 'Payment of $2,450.00 for Order #1230',
+      description: 'Payment of Rs 689,000 for Order #1230',
       time: '2 hours ago',
       read: true
     },
@@ -98,7 +99,7 @@ const RecentActivity = () => {
       icon: User,
       iconColor: 'green',
       title: 'VIP Customer',
-      description: 'Customer spent over $5,000 this month',
+      description: 'Customer spent over Rs 1,400,000 this month',
       time: '8 hours ago',
       read: true
     },
@@ -131,6 +132,14 @@ const RecentActivity = () => {
 
   const unreadCount = activities.filter(a => !a.read).length;
 
+  // Stats for the top cards
+  const stats = [
+    { label: 'Total Orders', value: '1,234', change: '+12.5%', trend: 'up', icon: ShoppingBag, color: 'blue' },
+    { label: 'New Customers', value: '856', change: '+8.2%', trend: 'up', icon: Users, color: 'green' },
+    { label: 'Revenue Today', value: 'Rs 2.4M', change: '+15.3%', trend: 'up', icon: DollarSign, color: 'teal' },
+    { label: 'Pending Alerts', value: '23', change: '-5.1%', trend: 'down', icon: AlertCircle, color: 'red' }
+  ];
+
   const getIconColorClass = (color) => {
     switch (color) {
       case 'blue': return 'icon-blue';
@@ -155,10 +164,38 @@ const RecentActivity = () => {
         </div>
         <div className="page-actions">
           <button className="btn btn-secondary">
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+          <button className="btn btn-primary">
             <Download size={16} />
             Export
           </button>
         </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div key={index} className="stat-card animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
+              <div className="stat-card-header">
+                <div className={`stat-icon-wrapper ${stat.color}`}>
+                  <Icon size={22} />
+                </div>
+                <div className={`stat-trend ${stat.trend}`}>
+                  {stat.trend === 'up' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                  {stat.change}
+                </div>
+              </div>
+              <div className="stat-card-body">
+                <span className="stat-value">{stat.value}</span>
+                <span className="stat-label">{stat.label}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Filters */}

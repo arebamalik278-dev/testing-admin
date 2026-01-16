@@ -6,9 +6,9 @@ const Settings = () => {
   const [settings, setSettings] = useState({
     siteName: 'AF-Mart',
     siteEmail: 'admin@afmart.com',
-    currency: 'USD',
-    taxRate: '10',
-    shippingFee: '5.99'
+    currency: 'PKR',
+    taxRate: '16',
+    shippingFee: '199'
   });
 
   const [loading, setLoading] = useState(false);
@@ -94,8 +94,8 @@ const Settings = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Shipping Fee ($)</label>
+<div className="form-group">
+              <label className="form-label">Shipping Fee (Rs)</label>
               <input
                 type="number"
                 value={settings.shippingFee}

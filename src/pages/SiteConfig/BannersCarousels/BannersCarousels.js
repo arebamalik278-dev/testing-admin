@@ -7,7 +7,7 @@ const BannersCarousels = () => {
   const [banners, setBanners] = useState([
     { id: 1, title: 'Summer Sale 2026', subtitle: 'Up to 50% off on selected items', image: 'https://via.placeholder.com/800x300/3b82f6/ffffff?text=Summer+Sale', link: '/sale', order: 1, active: true },
     { id: 2, title: 'New Arrivals', subtitle: 'Check out our latest products', image: 'https://via.placeholder.com/800x300/8b5cf6/ffffff?text=New+Arrivals', link: '/new', order: 2, active: true },
-    { id: 3, title: 'Free Shipping', subtitle: 'On orders over $50', image: 'https://via.placeholder.com/800x300/10b981/ffffff?text=Free+Shipping', link: '/shipping', order: 3, active: false }
+    { id: 3, title: 'Free Shipping', subtitle: 'On orders over Rs 5,000', image: 'https://via.placeholder.com/800x300/10b981/ffffff?text=Free+Shipping', link: '/shipping', order: 3, active: false }
   ]);
 
   const [showModal, setShowModal] = useState(false);

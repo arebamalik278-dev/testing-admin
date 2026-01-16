@@ -8,14 +8,14 @@ import './ProductList.css';
 
 const ProductList = () => {
   const [products, setProducts] = useState([
-    { id: 1, name: 'iPhone 15 Pro', sku: 'IPP-001', category: 'Electronics', price: 999, stock: 234, status: 'active', image: 'https://via.placeholder.com/60x60/3b82f6/ffffff?text=iPhone' },
-    { id: 2, name: 'MacBook Air M3', sku: 'MBA-002', category: 'Electronics', price: 1099, stock: 156, status: 'active', image: 'https://via.placeholder.com/60x60/10b981/ffffff?text=MacBook' },
-    { id: 3, name: 'AirPods Pro 2', sku: 'APP-003', category: 'Audio', price: 249, stock: 432, status: 'active', image: 'https://via.placeholder.com/60x60/8b5cf6/ffffff?text=AirPods' },
-    { id: 4, name: 'Apple Watch Ultra', sku: 'AWU-004', category: 'Wearables', price: 799, stock: 89, status: 'low', image: 'https://via.placeholder.com/60x60/f59e0b/ffffff?text=Watch' },
-    { id: 5, name: 'iPad Pro 12.9"', sku: 'IPP-005', category: 'Tablets', price: 1099, stock: 123, status: 'active', image: 'https://via.placeholder.com/60x60/ef4444/ffffff?text=iPad' },
-    { id: 6, name: 'Samsung Galaxy S24', sku: 'SGS-006', category: 'Electronics', price: 849, stock: 267, status: 'active', image: 'https://via.placeholder.com/60x60/06b6d4/ffffff?text=Galaxy' },
-    { id: 7, name: 'Sony WH-1000XM5', sku: 'SWH-007', category: 'Audio', price: 349, stock: 178, status: 'active', image: 'https://via.placeholder.com/60x60/6366f1/ffffff?text=Sony' },
-    { id: 8, name: 'Nintendo Switch OLED', sku: 'NSO-008', category: 'Gaming', price: 349, stock: 45, status: 'low', image: 'https://via.placeholder.com/60x60/ec4899/ffffff?text=Switch' }
+    { id: 1, name: 'iPhone 15 Pro', sku: 'IPP-001', category: 'Electronics', price: 279999, stock: 234, status: 'active', image: 'https://via.placeholder.com/60x60/3b82f6/ffffff?text=iPhone' },
+    { id: 2, name: 'MacBook Air M3', sku: 'MBA-002', category: 'Electronics', price: 309999, stock: 156, status: 'active', image: 'https://via.placeholder.com/60x60/10b981/ffffff?text=MacBook' },
+    { id: 3, name: 'AirPods Pro 2', sku: 'APP-003', category: 'Audio', price: 69999, stock: 432, status: 'active', image: 'https://via.placeholder.com/60x60/8b5cf6/ffffff?text=AirPods' },
+    { id: 4, name: 'Apple Watch Ultra', sku: 'AWU-004', category: 'Wearables', price: 224999, stock: 89, status: 'low', image: 'https://via.placeholder.com/60x60/f59e0b/ffffff?text=Watch' },
+    { id: 5, name: 'iPad Pro 12.9"', sku: 'IPP-005', category: 'Tablets', price: 309999, stock: 123, status: 'active', image: 'https://via.placeholder.com/60x60/ef4444/ffffff?text=iPad' },
+    { id: 6, name: 'Samsung Galaxy S24', sku: 'SGS-006', category: 'Electronics', price: 239999, stock: 267, status: 'active', image: 'https://via.placeholder.com/60x60/06b6d4/ffffff?text=Galaxy' },
+    { id: 7, name: 'Sony WH-1000XM5', sku: 'SWH-007', category: 'Audio', price: 98999, stock: 178, status: 'active', image: 'https://via.placeholder.com/60x60/6366f1/ffffff?text=Sony' },
+    { id: 8, name: 'Nintendo Switch OLED', sku: 'NSO-008', category: 'Gaming', price: 98999, stock: 45, status: 'low', image: 'https://via.placeholder.com/60x60/ec4899/ffffff?text=Switch' }
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -201,7 +201,7 @@ const ProductList = () => {
                   </td>
                   <td className="text-gray">{product.sku}</td>
                   <td>{product.category}</td>
-                  <td className="product-price">${product.price.toLocaleString()}</td>
+                  <td className="product-price">Rs {product.price.toLocaleString()}</td>
                   <td>
                     <span className={`stock-badge ${getStockStatus(product.stock)}`}>
                       {product.stock} units
@@ -302,7 +302,7 @@ const ProductList = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Price ($)</label>
+                  <label className="form-label">Price (Rs)</label>
                   <input
                     type="number"
                     placeholder="0.00"

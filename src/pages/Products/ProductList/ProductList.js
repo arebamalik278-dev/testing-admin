@@ -1,90 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, Search, Eye, Edit, Trash2, Filter, Download,
   MoreHorizontal, ChevronLeft, ChevronRight, X, CheckCircle, AlertCircle
 } from 'lucide-react';
-
-// API Configuration - Points to Vercel backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://backendtestin.vercel.app/api';
-
-// Helper function to get admin token
-const getAdminToken = () => {
-  return localStorage.getItem('adminToken') || '';
-};
-
-// API helper with auth
-const apiWithAuth = {
-  get: async (endpoint) => {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAdminToken()}`
-      },
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Network response was not ok');
-    }
-    return await response.json();
-  },
-  post: async (endpoint, data) => {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAdminToken()}`
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Network response was not ok');
-    }
-    return await response.json();
-  },
-  put: async (endpoint, data) => {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAdminToken()}`
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Network response was not ok');
-    }
-    return await response.json();
-  },
-  delete: async (endpoint) => {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAdminToken()}`
-      },
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Network response was not ok');
-    }
-    return await response.json();
-  }
-};
-
-// Default products for new installs
-const defaultProducts = [
-  { id: '1', name: 'iPhone 15 Pro', sku: 'IPP-001', category: 'Electronics', price: 279999, stock: 234, status: 'active', image: 'https://via.placeholder.com/60x60/3b82f6/ffffff?text=iPhone' },
-  { id: '2', name: 'MacBook Air M3', sku: 'MBA-002', category: 'Electronics', price: 309999, stock: 156, status: 'active', image: 'https://via.placeholder.com/60x60/10b981/ffffff?text=MacBook' },
-  { id: '3', name: 'AirPods Pro 2', sku: 'APP-003', category: 'Audio', price: 69999, stock: 432, status: 'active', image: 'https://via.placeholder.com/60x60/8b5cf6/ffffff?text=AirPods' },
-  { id: '4', name: 'Apple Watch Ultra', sku: 'AWU-004', category: 'Wearables', price: 224999, stock: 89, status: 'low', image: 'https://via.placeholder.com/60x60/f59e0b/ffffff?text=Watch' },
-  { id: '5', name: 'iPad Pro 12.9"', sku: 'IPP-005', category: 'Tablets', price: 309999, stock: 123, status: 'active', image: 'https://via.placeholder.com/60x60/ef4444/ffffff?text=iPad' },
-  { id: '6', name: 'Samsung Galaxy S24', sku: 'SGS-006', category: 'Electronics', price: 239999, stock: 267, status: 'active', image: 'https://via.placeholder.com/60x60/06b6d4/ffffff?text=Galaxy' },
-  { id: '7', name: 'Sony WH-1000XM5', sku: 'SWH-007', category: 'Audio', price: 98999, stock: 178, status: 'active', image: 'https://via.placeholder.com/60x60/6366f1/ffffff?text=Sony' },
-  { id: '8', name: 'Nintendo Switch OLED', sku: 'NSO-008', category: 'Gaming', price: 98999, stock: 45, status: 'low', image: 'https://via.placeholder.com/60x60/ec4899/ffffff?text=Switch' }
-];
+import api from '../../../api/api';
+import socketService from '../../../services/socketService';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -103,57 +23,112 @@ const ProductList = () => {
   const [productToDelete, setProductToDelete] = useState(null);
 
   const itemsPerPage = 10;
-  const categories = ['Electronics', 'Audio', 'Wearables', 'Tablets', 'Gaming', 'Accessories'];
+  const [categories, setCategories] = useState([]);
 
-  // Load products from localStorage or use defaults
+  // Load products and categories from backend
   useEffect(() => {
-    const loadProducts = () => {
-      const storedProducts = localStorage.getItem('adminProducts');
-      if (storedProducts) {
-        try {
-          setProducts(JSON.parse(storedProducts));
-        } catch (e) {
-          setProducts(defaultProducts);
-          localStorage.setItem('adminProducts', JSON.stringify(defaultProducts));
-        }
-      } else {
-        setProducts(defaultProducts);
-        localStorage.setItem('adminProducts', JSON.stringify(defaultProducts));
+    fetchProducts();
+    fetchCategories();
+
+    // Connect to socket and listen for real-time updates
+    const connectSocket = async () => {
+      try {
+        await socketService.connect();
+        
+        // Listen for product updates
+        socketService.on('PRODUCT_UPDATED', (updatedProduct) => {
+          setProducts(prevProducts => 
+            prevProducts.map(product => {
+              if (product.id === updatedProduct._id) {
+                return {
+                  ...product,
+                  name: updatedProduct.name,
+                  category: updatedProduct.category?.name || updatedProduct.category || 'Uncategorized',
+                  price: updatedProduct.price,
+                  stock: updatedProduct.stock,
+                  status: updatedProduct.stock < 50 ? 'low' : 'active',
+                  image: updatedProduct.images?.[0]?.url || product.image
+                };
+              }
+              return product;
+            })
+          );
+        });
+
+        // Listen for product deletions
+        socketService.on('PRODUCT_DELETED', (deletedProduct) => {
+          setProducts(prevProducts => 
+            prevProducts.filter(product => product.id !== deletedProduct._id)
+          );
+        });
+
+        // Listen for product creations
+        socketService.on('PRODUCT_CREATED', (newProduct) => {
+          setProducts(prevProducts => [
+            ...prevProducts,
+            {
+              id: newProduct._id,
+              name: newProduct.name,
+              sku: newProduct.sku || `SKU-${newProduct._id.substring(0, 6)}`,
+              category: newProduct.category?.name || newProduct.category || 'Uncategorized',
+              price: newProduct.price,
+              stock: newProduct.stock,
+              status: newProduct.stock < 50 ? 'low' : 'active',
+              image: newProduct.images?.[0]?.url || 'https://via.placeholder.com/300x300/6b7280/ffffff?text=Product'
+            }
+          ]);
+        });
+      } catch (error) {
+        console.error('Failed to connect to socket:', error);
       }
     };
-    loadProducts();
+
+    connectSocket();
+
+    // Cleanup
+    return () => {
+      socketService.disconnect();
+    };
   }, []);
 
-  // Save products to localStorage whenever they change
-  const saveProductsToStorage = useCallback((updatedProducts) => {
-    localStorage.setItem('adminProducts', JSON.stringify(updatedProducts));
-    // Also update client products so both sides see same data
-    localStorage.setItem('clientProducts', JSON.stringify(updatedProducts));
-  }, []);
+  // Fetch categories from backend
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      if (response.success && response.data) {
+        // Extract category names from category objects
+        const categoryNames = response.data.map(category => category.name);
+        setCategories(categoryNames);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      // Fallback to default categories if API fails
+      setCategories(['Electronics', 'Audio', 'Wearables', 'Tablets', 'Gaming', 'Accessories']);
+    }
+  };
 
-  // Fetch products from backend (alternative to localStorage)
+  // Fetch products from backend
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const data = await apiWithAuth.get('/products');
-      if (data && data.length > 0) {
+      const response = await api.get('/products/admin/all');
+      if (response.success && response.data) {
         // Transform backend data to match frontend format
-        const transformedProducts = data.map(p => ({
-          id: p._id || p.id,
+        const transformedProducts = response.data.map(p => ({
+          id: p._id,
           name: p.name,
-          sku: p.sku || `SKU-${(p._id || p.id).substring(0, 6)}`,
-          category: p.category,
+          sku: p.sku || `SKU-${p._id.substring(0, 6)}`,
+          category: p.category?.name || p.category || 'Uncategorized',
           price: p.price,
           stock: p.stock,
           status: p.stock < 50 ? 'low' : 'active',
-          image: p.imageURL || p.image || 'https://via.placeholder.com/60x60/6b7280/ffffff?text=Product'
+          image: p.images?.[0]?.url || 'https://via.placeholder.com/300x300/6b7280/ffffff?text=Product'
         }));
         setProducts(transformedProducts);
-        saveProductsToStorage(transformedProducts);
       }
     } catch (error) {
-      console.warn('Backend not available, using localStorage:', error.message);
-      // Keep using localStorage data
+      console.error('Failed to fetch products:', error);
+      showMessage('error', 'Failed to load products: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -189,58 +164,58 @@ const ProductList = () => {
     try {
       if (editingProduct) {
         // Update existing product
-        const updatedProducts = products.map(p => 
-          p.id === editingProduct.id ? { ...p, ...formData } : p
-        );
-        setProducts(updatedProducts);
-        saveProductsToStorage(updatedProducts);
-        
-        // Try backend update
-        try {
-          await apiWithAuth.put(`/products/${editingProduct.id}`, {
-            name: formData.name,
-            sku: formData.sku,
-            category: formData.category,
-            price: parseFloat(formData.price),
-            stock: parseInt(formData.stock),
-            imageURL: formData.image
-          });
-        } catch (e) {
-          console.warn('Backend update failed, using localStorage only');
+        const response = await api.put(`/products/${editingProduct.id}`, {
+          name: formData.name,
+          sku: formData.sku,
+          category: formData.category,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock),
+          images: formData.image ? [{ url: formData.image, alt: `${formData.name} image` }] : []
+        });
+
+        if (response.success) {
+          const updatedProducts = products.map(p => 
+            p.id === editingProduct.id ? { 
+              ...p, 
+              ...formData, 
+              price: parseFloat(formData.price), 
+              stock: parseInt(formData.stock)
+            } : p
+          );
+          setProducts(updatedProducts);
+          showMessage('success', 'Product updated successfully');
         }
-        
-        showMessage('success', 'Product updated successfully');
       } else {
         // Add new product
-        const newProduct = {
-          id: Date.now().toString(),
-          ...formData,
+        const response = await api.post('/products', {
+          name: formData.name,
+          sku: formData.sku,
+          category: formData.category,
           price: parseFloat(formData.price),
-          stock: parseInt(formData.stock)
-        };
-        const updatedProducts = [...products, newProduct];
-        setProducts(updatedProducts);
-        saveProductsToStorage(updatedProducts);
-        
-        // Try backend create
-        try {
-          await apiWithAuth.post('/products', {
-            name: formData.name,
-            sku: formData.sku,
-            category: formData.category,
+          stock: parseInt(formData.stock),
+          images: formData.image ? [{ url: formData.image, alt: `${formData.name} image` }] : [],
+          description: `${formData.name} is a high quality product`,
+          brand: 'Generic',
+          specifications: [],
+          tags: [formData.category.toLowerCase()],
+          isFeatured: false
+        });
+
+        if (response.success) {
+          const newProduct = {
+            id: response.data._id,
+            ...formData,
             price: parseFloat(formData.price),
             stock: parseInt(formData.stock),
-            imageURL: formData.image
-          });
-        } catch (e) {
-          console.warn('Backend create failed, using localStorage only');
+            image: formData.image || 'https://via.placeholder.com/60x60/6b7280/ffffff?text=Product'
+          };
+          setProducts([...products, newProduct]);
+          showMessage('success', 'Product added successfully');
         }
-        
-        showMessage('success', 'Product added successfully');
       }
       closeModal();
     } catch (error) {
-      showMessage('error', 'Error saving product');
+      showMessage('error', 'Error saving product: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -256,21 +231,14 @@ const ProductList = () => {
     
     setLoading(true);
     try {
-      // Update local state
-      const updatedProducts = products.filter(p => p.id !== productToDelete.id);
-      setProducts(updatedProducts);
-      saveProductsToStorage(updatedProducts);
-      
-      // Try backend delete
-      try {
-        await apiWithAuth.delete(`/products/${productToDelete.id}`);
-      } catch (e) {
-        console.warn('Backend delete failed, using localStorage only');
+      const response = await api.delete(`/products/${productToDelete.id}`);
+      if (response.success) {
+        const updatedProducts = products.filter(p => p.id !== productToDelete.id);
+        setProducts(updatedProducts);
+        showMessage('success', 'Product deleted successfully');
       }
-      
-      showMessage('success', 'Product deleted successfully');
     } catch (error) {
-      showMessage('error', 'Error deleting product');
+      showMessage('error', 'Error deleting product: ' + error.message);
     } finally {
       setLoading(false);
       setShowConfirm(false);
@@ -295,7 +263,7 @@ const ProductList = () => {
   const closeModal = () => {
     setShowModal(false);
     setEditingProduct(null);
-    setFormData({ name: '', sku: '', category: '', price: '', stock: '', status: 'active', image: 'https://via.placeholder.com/60x60/6b7280/ffffff?text=Product' });
+    setFormData({ name: '', sku: '', category: '', price: '', stock: '', status: 'active', image: 'https://via.placeholder.com/300x300/6b7280/ffffff?text=Product' });
   };
 
   const openAddModal = () => {
@@ -307,7 +275,7 @@ const ProductList = () => {
       price: '', 
       stock: '', 
       status: 'active', 
-      image: 'https://via.placeholder.com/60x60/6b7280/ffffff?text=Product' 
+      image: 'https://via.placeholder.com/300x300/6b7280/ffffff?text=Product' 
     });
     setShowModal(true);
   };
@@ -331,12 +299,12 @@ const ProductList = () => {
       <div className="page-header">
         <div className="page-header-left">
           <h2 className="page-title">Product List</h2>
-          <p className="page-subtitle">{products.length} products • Synced with client</p>
+          <p className="page-subtitle">{products.length} products • Live database</p>
         </div>
         <div className="page-actions">
           <button onClick={fetchProducts} className="btn btn-secondary" disabled={loading}>
             <Download size={16} />
-            Sync Backend
+            Refresh
           </button>
           <button onClick={openAddModal} className="btn btn-primary">
             <Plus size={20} />
@@ -501,14 +469,15 @@ const ProductList = () => {
                     className="form-input"
                   />
                 </div>
+
                 <div className="form-group">
-                  <label className="form-label">Category</label>
+                  <label className="form-label">Category *</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="form-input"
                   >
-                    <option value="">Select Category</option>
+                    <option value="">Select category</option>
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -518,48 +487,33 @@ const ProductList = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Price (Rs) *</label>
+                  <label className="form-label">Price *</label>
                   <input
                     type="number"
-                    placeholder="0.00"
+                    placeholder="Enter price"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="form-input"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
+
                 <div className="form-group">
                   <label className="form-label">Stock *</label>
                   <input
                     type="number"
-                    placeholder="0"
+                    placeholder="Enter stock"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                     className="form-input"
-                    min="0"
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="form-input"
-                >
-                  <option value="active">Active</option>
-                  <option value="low">Low Stock</option>
-                  <option value="inactive">Inactive</option>
-                </select>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Image URL</label>
                 <input
                   type="text"
-                  placeholder="https://example.com/image.jpg"
+                  placeholder="Enter image URL"
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   className="form-input"
@@ -571,7 +525,7 @@ const ProductList = () => {
                   Cancel
                 </button>
                 <button onClick={handleSubmit} className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Saving...' : (editingProduct ? 'Update Product' : 'Add Product')}
+                  {loading ? 'Saving...' : (editingProduct ? 'Update' : 'Add')}
                 </button>
               </div>
             </div>
@@ -579,26 +533,26 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation */}
       {showConfirm && (
         <div className="modal-overlay">
-          <div className="modal modal-sm">
+          <div className="modal">
             <div className="modal-header">
               <h3 className="modal-title">Confirm Delete</h3>
               <button onClick={() => setShowConfirm(false)} className="modal-close">
                 <X size={20} />
               </button>
             </div>
-            <div className="modal-body">
-              <p>Are you sure you want to delete <strong>{productToDelete?.name}</strong>?</p>
-              <p className="text-muted">This action cannot be undone.</p>
+            <div className="modal-content">
+              <p>Are you sure you want to delete {productToDelete?.name}?</p>
+              <p className="text-danger">This action cannot be undone.</p>
             </div>
             <div className="modal-actions">
               <button onClick={() => setShowConfirm(false)} className="btn btn-secondary">
                 Cancel
               </button>
               <button onClick={confirmDelete} className="btn btn-danger" disabled={loading}>
-                {loading ? 'Deleting...' : 'Delete Product'}
+                {loading ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
@@ -609,4 +563,3 @@ const ProductList = () => {
 };
 
 export default ProductList;
-

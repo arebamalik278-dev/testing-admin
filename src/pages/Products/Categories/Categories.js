@@ -1,33 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Plus, Search, Edit, Trash2, Eye, MoreHorizontal,
-  ChevronRight, Folder, FolderOpen, Image, Grid, X
+  Plus, Search, Edit, Trash2, Eye,
+  ChevronRight, Folder, Image, Grid, X
 } from 'lucide-react';
 import './Categories.css';
+import api from '../../../api/api';
 
 const Categories = () => {
-  const [categories, setCategories] = useState([
-    { id: 1, name: 'Electronics', slug: 'electronics', icon: '💻', color: '#3b82f6', products: 234, subcategories: ['Smartphones', 'Laptops', 'Tablets', 'Accessories'], image: 'https://via.placeholder.com/100x100/3b82f6/ffffff?text=Elec' },
-    { id: 2, name: 'Audio', slug: 'audio', icon: '🎧', color: '#8b5cf6', products: 156, subcategories: ['Headphones', 'Speakers', 'Earbuds'], image: 'https://via.placeholder.com/100x100/8b5cf6/ffffff?text=Audio' },
-    { id: 3, name: 'Wearables', slug: 'wearables', icon: '⌚', color: '#10b981', products: 89, subcategories: ['Smartwatches', 'Fitness Trackers'], image: 'https://via.placeholder.com/100x100/10b981/ffffff?text=Wear' },
-    { id: 4, name: 'Gaming', slug: 'gaming', icon: '🎮', color: '#ec4899', products: 167, subcategories: ['Consoles', 'Games', 'Accessories'], image: 'https://via.placeholder.com/100x100/ec4899/ffffff?text=Game' },
-    { id: 5, name: 'Cameras', slug: 'cameras', icon: '📷', color: '#f59e0b', products: 78, subcategories: ['DSLR', 'Mirrorless', 'Action Cams'], image: 'https://via.placeholder.com/100x100/f59e0b/ffffff?text=Cam' },
-    { id: 6, name: 'Accessories', slug: 'accessories', icon: '🔌', color: '#6b7280', products: 312, subcategories: ['Cables', 'Chargers', 'Cases'], image: 'https://via.placeholder.com/100x100/6b7280/ffffff?text=Acc' }
-  ]);
-
+  const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     color: '#3b82f6',
     icon: '📁',
-    subcategories: ''
+    subcategories: '',
+    description: '',
+    isActive: true
   });
+
+  // Fetch categories from backend
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get('/categories/admin/all');
+      if (response.success) {
+        setCategories(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      setError(err.message || 'Failed to fetch categories. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const filteredCategories = categories.filter(cat =>
     cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,24 +58,38 @@ const Categories = () => {
     );
   };
 
-  const handleSubmit = () => {
-    if (formData.name && formData.slug) {
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const categoryData = {
+        ...formData,
+        subcategories: formData.subcategories.split(',').map(s => s.trim()).filter(Boolean)
+      };
+
       if (editingCategory) {
-        setCategories(categories.map(cat => 
-          cat.id === editingCategory.id 
-            ? { ...cat, ...formData, subcategories: formData.subcategories.split(',').map(s => s.trim()).filter(Boolean) }
-            : cat
-        ));
+        // Update existing category
+        const response = await api.put(`/categories/${editingCategory._id}`, categoryData);
+        if (response.success) {
+          setCategories(categories.map(cat => 
+            cat._id === editingCategory._id ? response.data : cat
+          ));
+        }
       } else {
-        setCategories([...categories, {
-          ...formData,
-          id: Date.now(),
-          products: 0,
-          subcategories: formData.subcategories.split(',').map(s => s.trim()).filter(Boolean),
-          image: `https://via.placeholder.com/100x100/${formData.color.replace('#', '')}/ffffff?text=${formData.name.substring(0, 3)}`
-        }]);
+        // Create new category
+        const response = await api.post('/categories', categoryData);
+        if (response.success) {
+          setCategories([...categories, response.data]);
+        }
       }
+      
       closeModal();
+    } catch (err) {
+      console.error('Error saving category:', err);
+      setError(err.message || 'Failed to save category. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,22 +100,73 @@ const Categories = () => {
       slug: category.slug,
       color: category.color,
       icon: category.icon,
-      subcategories: category.subcategories.join(', ')
+      subcategories: category.subcategories.join(', '),
+      description: category.description || '',
+      isActive: category.isActive
     });
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      setCategories(categories.filter(cat => cat.id !== id));
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.delete(`/categories/${id}`);
+        if (response.success) {
+          setCategories(categories.filter(cat => cat._id !== id));
+        }
+      } catch (err) {
+        console.error('Error deleting category:', err);
+        setError(err.message || 'Failed to delete category. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const toggleCategoryStatus = async (category) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.patch(`/categories/${category._id}/toggle`);
+      if (response.success) {
+        setCategories(categories.map(cat => 
+          cat._id === category._id ? response.data : cat
+        ));
+      }
+    } catch (err) {
+      console.error('Error toggling category status:', err);
+      setError(err.message || 'Failed to toggle category status. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const closeModal = () => {
     setShowModal(false);
     setEditingCategory(null);
-    setFormData({ name: '', slug: '', color: '#3b82f6', icon: '📁', subcategories: '' });
+    setFormData({ 
+      name: '', 
+      slug: '', 
+      color: '#3b82f6', 
+      icon: '📁', 
+      subcategories: '',
+      description: '',
+      isActive: true
+    });
   };
+
+  if (loading && categories.length === 0) {
+    return (
+      <div className="categories-page animate-fade-in">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading categories...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="categories-page animate-fade-in">
@@ -116,6 +199,15 @@ const Categories = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="error-message">
+          {error}
+          <button className="error-close" onClick={() => setError(null)}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <div className="categories-search">
         <div className="search-box">
           <Search size={18} className="search-icon" />
@@ -132,9 +224,12 @@ const Categories = () => {
       {viewMode === 'grid' ? (
         <div className="categories-grid">
           {filteredCategories.map(category => (
-            <div key={category.id} className="category-card card-hover">
+            <div key={category._id} className="category-card card-hover">
               <div className="category-image" style={{ backgroundColor: category.color + '20' }}>
-                <img src={category.image} alt={category.name} />
+                <img 
+                  src={`https://via.placeholder.com/100x100/${category.color.replace('#', '')}/ffffff?text=${category.name.substring(0, 3)}`} 
+                  alt={category.name} 
+                />
                 <span className="category-icon">{category.icon}</span>
               </div>
               
@@ -148,11 +243,15 @@ const Categories = () => {
                   </span>
                   <span className="stat">
                     <Image size={14} />
-                    {category.products} products
+                    {category.products || 0} products
                   </span>
                 </div>
 
-                {expandedCategories.includes(category.id) && (
+                {category.description && (
+                  <p className="category-description">{category.description}</p>
+                )}
+
+                {expandedCategories.includes(category._id) && (
                   <div className="subcategories-list">
                     {category.subcategories.map((sub, idx) => (
                       <div key={idx} className="subcategory-item">
@@ -166,15 +265,22 @@ const Categories = () => {
                 <div className="category-actions">
                   <button 
                     className="btn-text"
-                    onClick={() => toggleExpand(category.id)}
+                    onClick={() => toggleExpand(category._id)}
                   >
-                    {expandedCategories.includes(category.id) ? 'Hide' : 'Show'} Subcategories
+                    {expandedCategories.includes(category._id) ? 'Hide' : 'Show'} Subcategories
                   </button>
                   <div className="action-buttons">
+                    <button 
+                      className="btn-icon" 
+                      title={category.isActive ? "Deactivate" : "Activate"}
+                      onClick={() => toggleCategoryStatus(category)}
+                    >
+                      <Eye size={16} style={{ color: category.isActive ? '#10b981' : '#6b7280' }} />
+                    </button>
                     <button className="btn-icon" title="Edit" onClick={() => handleEdit(category)}>
                       <Edit size={16} />
                     </button>
-                    <button className="btn-icon" title="Delete" onClick={() => handleDelete(category.id)}>
+                    <button className="btn-icon" title="Delete" onClick={() => handleDelete(category._id)}>
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -192,28 +298,45 @@ const Categories = () => {
                 <th>Slug</th>
                 <th>Subcategories</th>
                 <th>Products</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredCategories.map(category => (
-                <tr key={category.id}>
+                <tr key={category._id}>
                   <td>
                     <div className="category-cell">
-                      <img src={category.image} alt={category.name} className="category-thumb" />
+                      <img 
+                        src={`https://via.placeholder.com/100x100/${category.color.replace('#', '')}/ffffff?text=${category.name.substring(0, 3)}`} 
+                        alt={category.name} 
+                        className="category-thumb" 
+                      />
                       <span className="category-icon-small">{category.icon}</span>
                       <span className="category-name-text">{category.name}</span>
                     </div>
                   </td>
                   <td><code className="category-slug-text">/{category.slug}</code></td>
                   <td>{category.subcategories.length}</td>
-                  <td>{category.products}</td>
+                  <td>{category.products || 0}</td>
+                  <td>
+                    <span className={`status-badge ${category.isActive ? 'active' : 'inactive'}`}>
+                      {category.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
                   <td>
                     <div className="action-buttons">
+                      <button 
+                        className="btn-icon" 
+                        title={category.isActive ? "Deactivate" : "Activate"}
+                        onClick={() => toggleCategoryStatus(category)}
+                      >
+                        <Eye size={16} style={{ color: category.isActive ? '#10b981' : '#6b7280' }} />
+                      </button>
                       <button className="btn-icon" title="Edit" onClick={() => handleEdit(category)}>
                         <Edit size={16} />
                       </button>
-                      <button className="btn-icon" title="Delete" onClick={() => handleDelete(category.id)}>
+                      <button className="btn-icon" title="Delete" onClick={() => handleDelete(category._id)}>
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -286,6 +409,17 @@ const Categories = () => {
               </div>
 
               <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  placeholder="Category description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="form-input textarea"
+                  rows={3}
+                />
+              </div>
+
+              <div className="form-group">
                 <label className="form-label">Subcategories (comma-separated)</label>
                 <textarea
                   placeholder="Subcategory 1, Subcategory 2, Subcategory 3"
@@ -296,9 +430,32 @@ const Categories = () => {
                 />
               </div>
 
+              <div className="form-group">
+                <label className="form-label">Status</label>
+                <select
+                  value={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })}
+                  className="form-input"
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+
               <div className="modal-actions">
-                <button onClick={handleSubmit} className="btn btn-primary">
-                  {editingCategory ? 'Update Category' : 'Add Category'}
+                <button 
+                  onClick={handleSubmit} 
+                  className="btn btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <div className="spinner-small"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    editingCategory ? 'Update Category' : 'Add Category'
+                  )}
                 </button>
                 <button onClick={closeModal} className="btn btn-secondary">
                   Cancel
@@ -313,4 +470,3 @@ const Categories = () => {
 };
 
 export default Categories;
-

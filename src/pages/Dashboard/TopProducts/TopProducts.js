@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  TrendingUp, TrendingDown, Star, Eye, ShoppingCart, 
-  DollarSign, Package, Download, Filter, Search, ChevronDown,
-  Grid, List
+  TrendingUp, TrendingDown, Star, Download, Search, 
+  Grid, List, Loader, Package
 } from 'lucide-react';
+import api from '../../../api/api';
 import './TopProducts.css';
 
 const TopProducts = () => {
@@ -11,140 +11,47 @@ const TopProducts = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Top products data
-  const topProducts = [
-    {
-      id: 1,
-      name: 'iPhone 15 Pro',
-      sku: 'IPP-001',
-      category: 'Electronics',
-      image: 'https://via.placeholder.com/80x80/3b82f6/ffffff?text=iPhone',
-      price: 279999,
-      sales: 234,
-      revenue: 65640000,
-      trend: '+15.2%',
-      trendDirection: 'up',
-      rating: 4.8,
-      reviews: 156,
-      stock: 45,
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: 'MacBook Air M3',
-      sku: 'MBA-002',
-      category: 'Electronics',
-      image: 'https://via.placeholder.com/80x80/10b981/ffffff?text=MacBook',
-      price: 309999,
-      sales: 189,
-      revenue: 58590000,
-      trend: '+8.7%',
-      trendDirection: 'up',
-      rating: 4.9,
-      reviews: 203,
-      stock: 67,
-      status: 'active'
-    },
-    {
-      id: 3,
-      name: 'AirPods Pro 2',
-      sku: 'APP-003',
-      category: 'Audio',
-      image: 'https://via.placeholder.com/80x80/8b5cf6/ffffff?text=AirPods',
-      price: 69999,
-      sales: 456,
-      revenue: 31920000,
-      trend: '+22.1%',
-      trendDirection: 'up',
-      rating: 4.7,
-      reviews: 312,
-      stock: 123,
-      status: 'active'
-    },
-    {
-      id: 4,
-      name: 'iPad Pro 12.9"',
-      sku: 'IPP-004',
-      category: 'Tablets',
-      image: 'https://via.placeholder.com/80x80/f59e0b/ffffff?text=iPad',
-      price: 309999,
-      sales: 167,
-      revenue: 51770000,
-      trend: '+5.3%',
-      trendDirection: 'up',
-      rating: 4.6,
-      reviews: 89,
-      stock: 34,
-      status: 'active'
-    },
-    {
-      id: 5,
-      name: 'Apple Watch Ultra',
-      sku: 'AWU-005',
-      category: 'Wearables',
-      image: 'https://via.placeholder.com/80x80/ef4444/ffffff?text=Watch',
-      price: 224999,
-      sales: 145,
-      revenue: 32625000,
-      trend: '+12.8%',
-      trendDirection: 'up',
-      rating: 4.5,
-      reviews: 78,
-      stock: 23,
-      status: 'low'
-    },
-    {
-      id: 6,
-      name: 'Sony WH-1000XM5',
-      sku: 'SWH-006',
-      category: 'Audio',
-      image: 'https://via.placeholder.com/80x80/06b6d4/ffffff?text=Sony',
-      price: 98999,
-      sales: 178,
-      revenue: 17622000,
-      trend: '-3.2%',
-      trendDirection: 'down',
-      rating: 4.4,
-      reviews: 145,
-      stock: 89,
-      status: 'active'
-    },
-    {
-      id: 7,
-      name: 'Nintendo Switch OLED',
-      sku: 'NSO-007',
-      category: 'Gaming',
-      image: 'https://via.placeholder.com/80x80/ec4899/ffffff?text=Switch',
-      price: 98999,
-      sales: 134,
-      revenue: 13266000,
-      trend: '+18.9%',
-      trendDirection: 'up',
-      rating: 4.3,
-      reviews: 67,
-      stock: 12,
-      status: 'low'
-    },
-    {
-      id: 8,
-      name: 'Samsung Galaxy S24',
-      sku: 'SGS-008',
-      category: 'Electronics',
-      image: 'https://via.placeholder.com/80x80/6366f1/ffffff?text=Galaxy',
-      price: 239999,
-      sales: 123,
-      revenue: 29520000,
-      trend: '+7.1%',
-      trendDirection: 'up',
-      rating: 4.2,
-      reviews: 98,
-      stock: 56,
-      status: 'active'
-    }
-  ];
+  // Fetch top products from API
+  useEffect(() => {
+    const fetchTopProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get('/dashboard/top-products?limit=10');
+        // Transform API response to match frontend structure
+        const transformedProducts = response.data.map((item, index) => ({
+          id: item.product?._id || `temp-${index}`,
+          name: item.product?.name || 'Unknown Product',
+          sku: item.product?.sku || 'N/A',
+          category: item.product?.category || 'Uncategorized',
+          image: item.product?.images?.[0]?.url || 'https://via.placeholder.com/80x80/3b82f6/ffffff?text=Product',
+          price: item.product?.price || 0,
+          sales: item.sales || 0,
+          revenue: item.revenue || 0,
+          trend: '+0%',
+          trendDirection: 'up',
+          rating: item.product?.ratings?.average || 0,
+          reviews: item.product?.ratings?.count || 0,
+          stock: item.product?.stock || 0,
+          status: (item.product?.stock || 0) < 25 ? 'low' : 'active'
+        }));
+        setProducts(transformedProducts);
+      } catch (err) {
+        console.error('Error fetching top products:', err);
+        setError('Failed to load top products. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filteredProducts = topProducts.filter(product =>
+    fetchTopProducts();
+  }, [timeRange]);
+
+  const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -183,25 +90,12 @@ const TopProducts = () => {
     return colors[category] || '#6b7280';
   };
 
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={i} size={14} fill="#fbbf24" color="#fbbf24" />);
-    }
-
-    if (hasHalfStar) {
-      stars.push(<Star key="half" size={14} fill="#fbbf24" color="#fbbf24" style={{ clipPath: 'inset(0 50% 0 0)' }} />);
-    }
-
-    const emptyStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Star key={`empty-${i}`} size={14} color="#e5e7eb" />);
-    }
-
-    return stars;
+  // Calculate trend data based on sorted position
+  const getProductTrend = (index, totalProducts) => {
+    if (totalProducts <= 1) return { trend: '+0%', trendDirection: 'up' };
+    if (index < totalProducts / 3) return { trend: '+15%', trendDirection: 'up' };
+    if (index < totalProducts * 2 / 3) return { trend: '+5%', trendDirection: 'up' };
+    return { trend: '-2%', trendDirection: 'down' };
   };
 
   return (
@@ -273,57 +167,90 @@ const TopProducts = () => {
         </div>
       </div>
 
-      {/* Top Products List */}
-      {viewMode === 'grid' ? (
+      {/* Loading State */}
+      {loading && (
+        <div className="loading-container">
+          <Loader size={40} className="loading-spinner" />
+          <p>Loading top products...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="error-container">
+          <p className="error-message">{error}</p>
+          <button onClick={() => window.location.reload()} className="btn btn-primary">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && products.length === 0 && (
+        <div className="empty-container">
+          <Package size={48} className="empty-icon" />
+          <p className="empty-message">No products found</p>
+          <p className="empty-subtitle">Start selling to see your top products here</p>
+        </div>
+      )}
+
+      {/* Top Products Grid */}
+      {!loading && !error && products.length > 0 && viewMode === 'grid' && (
         <div className="products-grid">
-          {sortedProducts.map((product, index) => (
-            <div key={product.id} className="product-card">
-              <div className="product-rank">{index + 1}</div>
-              <img src={product.image} alt={product.name} className="product-image" />
-              <div className="product-details">
-                <div className="product-header">
-                  <h3 className="product-name">{product.name}</h3>
-                  <span 
-                    className="product-category"
-                    style={{ backgroundColor: `${getCategoryColor(product.category)}20`, color: getCategoryColor(product.category) }}
-                  >
-                    {product.category}
-                  </span>
-                </div>
-                <div className="product-stats">
-                  <div className="stat-item">
-                    <span className="stat-label">Price</span>
-                    <span className="stat-value">Rs {product.price.toLocaleString()}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Sales</span>
-                    <span className="stat-value">{product.sales.toLocaleString()}</span>
-                  </div>
-                  <div className="stat-item">
-                    <span className="stat-label">Revenue</span>
-                    <span className="stat-value">Rs {product.revenue.toLocaleString()}</span>
-                  </div>
-                </div>
-                <div className="product-footer">
-                  <div className={`product-trend ${product.trendDirection}`}>
-                    {product.trendDirection === 'up' ? (
-                      <TrendingUp size={16} />
-                    ) : (
-                      <TrendingDown size={16} />
-                    )}
-                    <span>{product.trend}</span>
-                  </div>
-                  <div className="product-stock">
-                    <span className={`stock-status ${product.stock < 25 ? 'critical' : product.stock < 50 ? 'low' : 'medium'}`}>
-                      {product.stock} in stock
+          {sortedProducts.map((product, index) => {
+            const { trend, trendDirection } = getProductTrend(index, sortedProducts.length);
+            return (
+              <div key={product.id} className="product-card">
+                <div className="product-rank">{index + 1}</div>
+                <img src={product.image} alt={product.name} className="product-image" />
+                <div className="product-details">
+                  <div className="product-header">
+                    <h3 className="product-name">{product.name}</h3>
+                    <span 
+                      className="product-category"
+                      style={{ backgroundColor: `${getCategoryColor(product.category)}20`, color: getCategoryColor(product.category) }}
+                    >
+                      {product.category}
                     </span>
+                  </div>
+                  <div className="product-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Price</span>
+                      <span className="stat-value">Rs {product.price.toLocaleString()}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Sales</span>
+                      <span className="stat-value">{product.sales.toLocaleString()}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">Revenue</span>
+                      <span className="stat-value">Rs {product.revenue.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="product-footer">
+                    <div className={`product-trend ${trendDirection}`}>
+                      {trendDirection === 'up' ? (
+                        <TrendingUp size={16} />
+                      ) : (
+                        <TrendingDown size={16} />
+                      )}
+                      <span>{trend}</span>
+                    </div>
+                    <div className="product-stock">
+                      <span className={`stock-status ${product.stock < 25 ? 'critical' : product.stock < 50 ? 'low' : 'medium'}`}>
+                        {product.stock} in stock
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      ) : (
+      )}
+
+      {/* Top Products Table */}
+      {!loading && !error && products.length > 0 && viewMode === 'table' && (
         <div className="table-container">
           <table className="products-table">
             <thead>
@@ -339,41 +266,44 @@ const TopProducts = () => {
               </tr>
             </thead>
             <tbody>
-              {sortedProducts.map((product, index) => (
-                <tr key={product.id}>
-                  <td>
-                    <span className={`rank-badge rank-${index + 1}`}>{index + 1}</span>
-                  </td>
-                  <td>
-                    <div className="product-cell">
-                      <img src={product.image} alt={product.name} className="product-thumb" />
-                      <span className="product-name">{product.name}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span 
-                      className="category-badge"
-                      style={{ backgroundColor: `${getCategoryColor(product.category)}20`, color: getCategoryColor(product.category) }}
-                    >
-                      {product.category}
-                    </span>
-                  </td>
-                  <td className="price-cell">Rs {product.price.toLocaleString()}</td>
-                  <td>{product.sales.toLocaleString()}</td>
-                  <td className="revenue-cell">Rs {product.revenue.toLocaleString()}</td>
-                  <td>
-                    <span className={`trend-badge ${product.trendDirection}`}>
-                      {product.trendDirection === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                      {product.trend}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`stock-badge ${product.stock < 25 ? 'critical' : product.stock < 50 ? 'low' : 'medium'}`}>
-                      {product.stock}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {sortedProducts.map((product, index) => {
+                const { trend, trendDirection } = getProductTrend(index, sortedProducts.length);
+                return (
+                  <tr key={product.id}>
+                    <td>
+                      <span className={`rank-badge rank-${index + 1}`}>{index + 1}</span>
+                    </td>
+                    <td>
+                      <div className="product-cell">
+                        <img src={product.image} alt={product.name} className="product-thumb" />
+                        <span className="product-name">{product.name}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span 
+                        className="category-badge"
+                        style={{ backgroundColor: `${getCategoryColor(product.category)}20`, color: getCategoryColor(product.category) }}
+                      >
+                        {product.category}
+                      </span>
+                    </td>
+                    <td className="price-cell">Rs {product.price.toLocaleString()}</td>
+                    <td>{product.sales.toLocaleString()}</td>
+                    <td className="revenue-cell">Rs {product.revenue.toLocaleString()}</td>
+                    <td>
+                      <span className={`trend-badge ${trendDirection}`}>
+                        {trendDirection === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                        {trend}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`stock-badge ${product.stock < 25 ? 'critical' : product.stock < 50 ? 'low' : 'medium'}`}>
+                        {product.stock}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -383,4 +313,3 @@ const TopProducts = () => {
 };
 
 export default TopProducts;
-

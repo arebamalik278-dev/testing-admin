@@ -1,123 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, UserPlus, Mail, Phone, MapPin, Calendar,
   Search, Filter, Download, MoreHorizontal, Eye, 
   Trash2, Edit, MessageSquare, X, ChevronDown
 } from 'lucide-react';
 import './CustomerDatabase.css';
+import api from '../../../api/api';
 
 const CustomerDatabase = () => {
-  const [customers, setCustomers] = useState([
-    { 
-      id: 1, 
-      name: 'John Doe', 
-      email: 'john.doe@email.com', 
-      phone: '+1 234-567-8901',
-      avatar: 'https://via.placeholder.com/100/3b82f6/ffffff?text=JD',
-      location: 'New York, USA',
-      joinDate: '2023-01-15',
-      orders: 12,
-      totalSpent: 4599.00,
-      lastOrder: '2024-01-10',
-      status: 'active'
-    },
-    { 
-      id: 2, 
-      name: 'Jane Smith', 
-      email: 'jane.smith@email.com', 
-      phone: '+1 234-567-8902',
-      avatar: 'https://via.placeholder.com/100/10b981/ffffff?text=JS',
-      location: 'Los Angeles, USA',
-      joinDate: '2023-02-20',
-      orders: 8,
-      totalSpent: 2899.00,
-      lastOrder: '2024-01-08',
-      status: 'active'
-    },
-    { 
-      id: 3, 
-      name: 'Mike Johnson', 
-      email: 'mike.j@email.com', 
-      phone: '+1 234-567-8903',
-      avatar: 'https://via.placeholder.com/100/8b5cf6/ffffff?text=MJ',
-      location: 'Chicago, USA',
-      joinDate: '2023-03-10',
-      orders: 15,
-      totalSpent: 7899.00,
-      lastOrder: '2024-01-12',
-      status: 'active'
-    },
-    { 
-      id: 4, 
-      name: 'Sarah Wilson', 
-      email: 'sarah.w@email.com', 
-      phone: '+1 234-567-8904',
-      avatar: 'https://via.placeholder.com/100/f59e0b/ffffff?text=SW',
-      location: 'Houston, USA',
-      joinDate: '2023-04-05',
-      orders: 3,
-      totalSpent: 899.00,
-      lastOrder: '2023-12-15',
-      status: 'inactive'
-    },
-    { 
-      id: 5, 
-      name: 'Tom Brown', 
-      email: 'tom.b@email.com', 
-      phone: '+1 234-567-8905',
-      avatar: 'https://via.placeholder.com/100/ec4899/ffffff?text=TB',
-      location: 'Phoenix, USA',
-      joinDate: '2023-05-18',
-      orders: 22,
-      totalSpent: 12599.00,
-      lastOrder: '2024-01-14',
-      status: 'active'
-    },
-    { 
-      id: 6, 
-      name: 'Emily Davis', 
-      email: 'emily.d@email.com', 
-      phone: '+1 234-567-8906',
-      avatar: 'https://via.placeholder.com/100/06b6d4/ffffff?text=ED',
-      location: 'Seattle, USA',
-      joinDate: '2023-06-22',
-      orders: 7,
-      totalSpent: 2349.00,
-      lastOrder: '2024-01-05',
-      status: 'active'
-    },
-    { 
-      id: 7, 
-      name: 'Chris Lee', 
-      email: 'chris.l@email.com', 
-      phone: '+1 234-567-8907',
-      avatar: 'https://via.placeholder.com/100/ef4444/ffffff?text=CL',
-      location: 'Boston, USA',
-      joinDate: '2023-07-30',
-      orders: 5,
-      totalSpent: 1599.00,
-      lastOrder: '2023-11-20',
-      status: 'inactive'
-    },
-    { 
-      id: 8, 
-      name: 'Amanda Taylor', 
-      email: 'amanda.t@email.com', 
-      phone: '+1 234-567-8908',
-      avatar: 'https://via.placeholder.com/100/6366f1/ffffff?text=AT',
-      location: 'Miami, USA',
-      joinDate: '2023-08-12',
-      orders: 18,
-      totalSpent: 8999.00,
-      lastOrder: '2024-01-11',
-      status: 'active'
-    }
-  ]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+
+  // Fetch customers from backend
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get('/users');
+        if (response.success) {
+          setCustomers(response.data);
+        } else {
+          throw new Error('Failed to fetch customers');
+        }
+      } catch (err) {
+        console.error('Error fetching customers:', err);
+        setError('Failed to load customers. Please try again.');
+        // Fallback to empty array
+        setCustomers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, []);
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = 
@@ -132,8 +55,8 @@ const CustomerDatabase = () => {
   const summaryStats = {
     totalCustomers: customers.length,
     activeCustomers: customers.filter(c => c.status === 'active').length,
-    totalOrders: customers.reduce((sum, c) => sum + c.orders, 0),
-    totalRevenue: customers.reduce((sum, c) => sum + c.totalSpent, 0)
+    totalOrders: customers.reduce((sum, c) => sum + (c.orders || 0), 0),
+    totalRevenue: customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0)
   };
 
   const getStatusBadge = (status) => {
@@ -148,6 +71,34 @@ const CustomerDatabase = () => {
     setSelectedCustomer(customer);
     setShowCustomerModal(true);
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="customer-database-container animate-fade-in">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading customers...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="customer-database-container animate-fade-in">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h3>Error Loading Customers</h3>
+          <p>{error}</p>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="customer-database-container animate-fade-in">
@@ -282,7 +233,7 @@ const CustomerDatabase = () => {
                     <span className="orders-cell">{customer.orders}</span>
                   </td>
                   <td>
-                    <span className="spent-cell">{`pkr${customer.totalSpent.toLocaleString()}`}</span>
+                    <span className="spent-cell">{`pkr${(customer.totalSpent || 0).toLocaleString()}`}</span>
                   </td>
                   <td>{getStatusBadge(customer.status)}</td>
                   <td>
@@ -380,7 +331,7 @@ const CustomerDatabase = () => {
                 </div>
                 <div className="stat-card">
                   <Calendar size={20} />
-                  <p className="stat-value">{`pkr${selectedCustomer.totalSpent.toLocaleString()}`}</p>
+                  <p className="stat-value">{`pkr${(selectedCustomer.totalSpent || 0).toLocaleString()}`}</p>
                   <p className="stat-label">Total Spent</p>
                 </div>
               </div>

@@ -1,120 +1,238 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Package,
-  ArrowUpRight, ArrowDownRight, Eye, Edit, Trash2, MoreHorizontal,
-  RefreshCw, Download, Calendar, Target, Zap
+  RefreshCw, Download, Target
 } from 'lucide-react';
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
   Legend, RadialBarChart, RadialBar
 } from 'recharts';
+import api from '../../../api/api';
 import './Analytics.css';
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Key Metrics
-  const metrics = [
-    {
-      label: 'Total Revenue',
-      value: 'pkr124,563',
-      change: '+12.5%',
-      trend: 'up',
-      target: 'pkr150,000',
-      progress: 83,
-      icon: DollarSign,
-      color: 'blue'
-    },
-    {
-      label: 'Conversion Rate',
-      value: '3.24%',
-      change: '+0.8%',
-      trend: 'up',
-      target: '4.0%',
-      progress: 81,
-      icon: Target,
-      color: 'green'
-    },
-    {
-      label: 'Avg Order Value',
-      value: 'pkr127.50',
-      change: '-2.1%',
-      trend: 'down',
-      target: 'pkr140.00',
-      progress: 91,
-      icon: ShoppingCart,
-      color: 'purple'
-    },
-    {
-      label: 'Customer Lifetime Value',
-      value: 'pkr458.00',
-      change: '+5.4%',
-      trend: 'up',
-      target: 'pkr500.00',
-      progress: 92,
-      icon: Users,
-      color: 'orange'
+  // State for analytics data
+  const [metrics, setMetrics] = useState([]);
+  const [salesTrendData, setSalesTrendData] = useState([]);
+  const [trafficData, setTrafficData] = useState([]);
+  const [deviceData, setDeviceData] = useState([]);
+  const [hourlyData, setHourlyData] = useState([]);
+  const [weeklyData, setWeeklyData] = useState([]);
+
+  // Format currency
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-PK', {
+      style: 'currency',
+      currency: 'PKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  // Fetch metrics data
+  const fetchMetrics = useCallback(async () => {
+    try {
+      const response = await api.get(`/dashboard/analytics/metrics?timeRange=${timeRange}`);
+      if (response.success && response.data) {
+        const data = response.data;
+        setMetrics([
+          {
+            label: 'Total Revenue',
+            value: formatCurrency(data.totalRevenue || 0),
+            change: `${(data.revenueChange || 0).toFixed(1)}%`,
+            trend: (data.revenueChange || 0) >= 0 ? 'up' : 'down',
+            target: formatCurrency(data.revenueTarget || 150000),
+            progress: Math.min(((data.totalRevenue || 0) / (data.revenueTarget || 150000)) * 100, 100),
+            icon: DollarSign,
+            color: 'blue'
+          },
+          {
+            label: 'Total Visitors',
+            value: (data.totalVisitors || 0).toLocaleString(),
+            change: `${(data.visitorsChange || 0).toFixed(1)}%`,
+            trend: (data.visitorsChange || 0) >= 0 ? 'up' : 'down',
+            target: '10000',
+            progress: Math.min(((data.totalVisitors || 0) / 10000) * 100, 100),
+            icon: Users,
+            color: 'green'
+          },
+          {
+            label: 'Avg Order Value',
+            value: formatCurrency(data.avgOrderValue || 0),
+            change: `${(data.avgOrderValueChange || 0).toFixed(1)}%`,
+            trend: (data.avgOrderValueChange || 0) >= 0 ? 'up' : 'down',
+            target: formatCurrency(data.avgOrderValueTarget || 140),
+            progress: Math.min(((data.avgOrderValue || 0) / (data.avgOrderValueTarget || 140)) * 100, 100),
+            icon: ShoppingCart,
+            color: 'purple'
+          },
+          {
+            label: 'Customer Lifetime Value',
+            value: formatCurrency(data.customerLifetimeValue || 0),
+            change: `${(data.clvChange || 0).toFixed(1)}%`,
+            trend: (data.clvChange || 0) >= 0 ? 'up' : 'down',
+            target: formatCurrency(data.clvTarget || 500),
+            progress: Math.min(((data.customerLifetimeValue || 0) / (data.clvTarget || 500)) * 100, 100),
+            icon: Users,
+            color: 'orange'
+          }
+        ]);
+        setError(null);
+      } else {
+        setError(response.message || 'Failed to load metrics');
+      }
+    } catch (err) {
+      console.error('Error fetching metrics:', err);
+      setError('Failed to load metrics data');
     }
-  ];
+  }, [timeRange]);
 
-  // Sales Trend Data
-  const salesTrendData = [
-    { name: 'Jan', revenue: 45000, orders: 380, visitors: 12500 },
-    { name: 'Feb', revenue: 52000, orders: 420, visitors: 14200 },
-    { name: 'Mar', revenue: 48000, orders: 395, visitors: 13800 },
-    { name: 'Apr', revenue: 61000, orders: 510, visitors: 16500 },
-    { name: 'May', revenue: 55000, orders: 460, visitors: 15200 },
-    { name: 'Jun', revenue: 67000, orders: 560, visitors: 17800 },
-    { name: 'Jul', revenue: 72000, orders: 600, visitors: 19200 },
-    { name: 'Aug', revenue: 78000, orders: 650, visitors: 21000 },
-    { name: 'Sep', revenue: 85000, orders: 710, visitors: 23500 },
-    { name: 'Oct', revenue: 92000, orders: 770, visitors: 25800 },
-    { name: 'Nov', revenue: 110000, orders: 920, visitors: 32000 },
-    { name: 'Dec', revenue: 125000, orders: 1050, visitors: 38500 }
-  ];
+  // Fetch sales trend data
+  const fetchSalesTrend = useCallback(async () => {
+    try {
+      const response = await api.get(`/dashboard/analytics/sales-trend?timeRange=${timeRange}`);
+      if (response.success && response.data) {
+        setSalesTrendData(response.data);
+      } else {
+        setSalesTrendData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching sales trend:', err);
+      setSalesTrendData([]);
+    }
+  }, [timeRange]);
 
-  // Traffic Sources
-  const trafficData = [
-    { name: 'Organic Search', value: 45, color: '#3b82f6' },
-    { name: 'Direct', value: 25, color: '#10b981' },
-    { name: 'Social Media', value: 15, color: '#f59e0b' },
-    { name: 'Referral', value: 10, color: '#8b5cf6' },
-    { name: 'Email', value: 5, color: '#ec4899' }
-  ];
+  // Fetch traffic sources data
+  const fetchTrafficSources = useCallback(async () => {
+    try {
+      const response = await api.get(`/dashboard/analytics/traffic-sources?timeRange=${timeRange}`);
+      if (response.success && response.data) {
+        setTrafficData(response.data);
+      } else {
+        setTrafficData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching traffic sources:', err);
+      setTrafficData([]);
+    }
+  }, [timeRange]);
 
-  // Device Distribution
-  const deviceData = [
-    { name: 'Mobile', value: 58, fill: '#3b82f6' },
-    { name: 'Desktop', value: 35, fill: '#10b981' },
-    { name: 'Tablet', value: 7, fill: '#f59e0b' }
-  ];
+  // Fetch device distribution data
+  const fetchDeviceDistribution = useCallback(async () => {
+    try {
+      const response = await api.get(`/dashboard/analytics/device-distribution?timeRange=${timeRange}`);
+      if (response.success && response.data) {
+        setDeviceData(response.data);
+      } else {
+        setDeviceData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching device distribution:', err);
+      setDeviceData([]);
+    }
+  }, [timeRange]);
 
-  // Hourly Activity
-  const hourlyData = [
-    { hour: '6AM', orders: 12, revenue: 1500 },
-    { hour: '8AM', orders: 35, revenue: 4200 },
-    { hour: '10AM', orders: 78, revenue: 9500 },
-    { hour: '12PM', orders: 125, revenue: 15800 },
-    { hour: '2PM', orders: 95, revenue: 12100 },
-    { hour: '4PM', orders: 110, revenue: 14200 },
-    { hour: '6PM', orders: 145, revenue: 18500 },
-    { hour: '8PM', orders: 132, revenue: 16800 },
-    { hour: '10PM', orders: 68, revenue: 8500 },
-    { hour: '12AM', orders: 25, revenue: 3200 }
-  ];
+  // Fetch hourly activity data
+  const fetchHourlyActivity = useCallback(async () => {
+    try {
+      const response = await api.get(`/dashboard/analytics/hourly-activity?timeRange=${timeRange}`);
+      if (response.success && response.data) {
+        setHourlyData(response.data);
+      } else {
+        setHourlyData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching hourly activity:', err);
+      setHourlyData([]);
+    }
+  }, [timeRange]);
 
-  // Weekly Performance
-  const weeklyData = [
-    { day: 'Mon', revenue: 12500, orders: 98 },
-    { day: 'Tue', revenue: 14200, orders: 112 },
-    { day: 'Wed', revenue: 11800, orders: 94 },
-    { day: 'Thu', revenue: 16500, orders: 130 },
-    { day: 'Fri', revenue: 19800, orders: 156 },
-    { day: 'Sat', revenue: 22500, orders: 178 },
-    { day: 'Sun', revenue: 18200, orders: 144 }
-  ];
+  // Fetch weekly performance data
+  const fetchWeeklyPerformance = useCallback(async () => {
+    try {
+      const response = await api.get(`/dashboard/analytics/weekly-performance?timeRange=${timeRange}`);
+      if (response.success && response.data) {
+        setWeeklyData(response.data);
+      } else {
+        setWeeklyData([]);
+      }
+    } catch (err) {
+      console.error('Error fetching weekly performance:', err);
+      setWeeklyData([]);
+    }
+  }, [timeRange]);
+
+  // Fetch all data
+  const fetchAllData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await Promise.all([
+        fetchMetrics(),
+        fetchSalesTrend(),
+        fetchTrafficSources(),
+        fetchDeviceDistribution(),
+        fetchHourlyActivity(),
+        fetchWeeklyPerformance()
+      ]);
+    } catch (err) {
+      console.error('Error fetching analytics data:', err);
+      setError('Failed to load analytics data');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchMetrics, fetchSalesTrend, fetchTrafficSources, fetchDeviceDistribution, fetchHourlyActivity, fetchWeeklyPerformance]);
+
+  // Fetch data on timeRange change
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  // Refresh data
+  const handleRefresh = () => {
+    fetchAllData();
+  };
+
+  // Calculate progress for metrics
+  const calculateProgress = (value, target) => {
+    return Math.min((value / target) * 100, 100);
+  };
+
+  // Get trend icon and color
+  const getTrendStyle = (trend) => {
+    return trend === 'up' ? 'up' : 'down';
+  };
+
+  if (loading && metrics.length === 0) {
+    return (
+      <div className="analytics-page">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading analytics data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && metrics.length === 0) {
+    return (
+      <div className="analytics-page">
+        <div className="error-container">
+          <p>{error}</p>
+          <button className="btn btn-primary" onClick={handleRefresh}>
+            <RefreshCw size={16} />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="analytics-page animate-fade-in">
@@ -155,6 +273,10 @@ const Analytics = () => {
             <option value="90d">Last 90 days</option>
             <option value="1y">Last year</option>
           </select>
+          <button className="btn btn-secondary" onClick={handleRefresh}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
           <button className="btn btn-secondary">
             <Download size={16} />
             Export Report
@@ -215,7 +337,7 @@ const Analytics = () => {
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-<CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                 <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
                 <YAxis yAxisId="left" stroke="#6b7280" fontSize={12} tickFormatter={(value) => `pkr${(value/1000)}k`} />
                 <YAxis yAxisId="right" orientation="right" stroke="#6b7280" fontSize={12} />
@@ -228,7 +350,7 @@ const Analytics = () => {
                   }}
                   formatter={(value, name) => [
                     name === 'revenue' ? `pkr${value.toLocaleString()}` : value,
-                    name === 'revenue' ? 'Revenue' : 'Orders'
+                    name === 'revenue' ? 'Revenue' : name === 'orders' ? 'Orders' : name
                   ]}
                 />
                 <Legend />
@@ -400,4 +522,3 @@ const Analytics = () => {
 };
 
 export default Analytics;
-

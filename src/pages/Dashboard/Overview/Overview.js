@@ -1,91 +1,143 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Package,
   ArrowUpRight, ArrowDownRight, Eye, Edit, Trash2, MoreHorizontal,
-  RefreshCw, Download, Plus
+  RefreshCw, Download, Plus, AlertCircle
 } from 'lucide-react';
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar, 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import api from '../../../api/api';
 import './Overview.css';
 
 const Overview = () => {
   const [timeRange, setTimeRange] = useState('7d');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Data states
+  const [stats, setStats] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [categoryData, setCategoryData] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
 
-  // Stats data
-  const stats = [
-    {
-      label: 'Total Revenue',
-      value: 'pkr124,563',
-      change: '+12.5%',
-      trend: 'up',
-      icon: DollarSign,
-      color: 'blue'
-    },
-    {
-      label: 'Total Orders',
-      value: '1,234',
-      change: '+8.2%',
-      trend: 'up',
-      icon: ShoppingCart,
-      color: 'green'
-    },
-    {
-      label: 'Total Customers',
-      value: '5,678',
-      change: '+23.1%',
-      trend: 'up',
-      icon: Users,
-      color: 'purple'
-    },
-    {
-      label: 'Products',
-      value: '342',
-      change: '-2.4%',
-      trend: 'down',
-      icon: Package,
-      color: 'orange'
+  // Category colors for pie chart
+  const categoryColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#6b7280', '#ef4444', '#ec4899'];
+
+  // Fetch all dashboard data
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [
+        statsRes,
+        revenueRes,
+        categoryRes,
+        ordersRes,
+        productsRes
+      ] = await Promise.all([
+        api.get('/dashboard/stats'),
+        api.get(`/dashboard/revenue-chart?days=${timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365}`),
+        api.get('/dashboard/category-distribution'),
+        api.get('/dashboard/recent-orders?limit=5'),
+        api.get('/dashboard/top-products?limit=5')
+      ]);
+
+      // Transform stats data
+      if (statsRes.success) {
+        const { data } = statsRes;
+        setStats([
+          {
+            label: 'Total Revenue',
+            value: `pkr${data.totalRevenue?.toLocaleString() || 0}`,
+            change: `${data.revenueChange >= 0 ? '+' : ''}${data.revenueChange}%`,
+            trend: data.revenueChange >= 0 ? 'up' : 'down',
+            icon: DollarSign,
+            color: 'blue'
+          },
+          {
+            label: 'Total Orders',
+            value: data.totalOrders?.toLocaleString() || '0',
+            change: `${data.ordersChange >= 0 ? '+' : ''}${data.ordersChange}%`,
+            trend: data.ordersChange >= 0 ? 'up' : 'down',
+            icon: ShoppingCart,
+            color: 'green'
+          },
+          {
+            label: 'Total Customers',
+            value: data.totalCustomers?.toLocaleString() || '0',
+            change: `${data.customersChange >= 0 ? '+' : ''}${data.customersChange}%`,
+            trend: data.customersChange >= 0 ? 'up' : 'down',
+            icon: Users,
+            color: 'purple'
+          },
+          {
+            label: 'Products',
+            value: data.totalProducts?.toLocaleString() || '0',
+            change: `${data.productsChange >= 0 ? '+' : ''}${data.productsChange}%`,
+            trend: data.productsChange >= 0 ? 'up' : 'down',
+            icon: Package,
+            color: 'orange'
+          }
+        ]);
+      }
+
+      // Transform revenue data
+      if (revenueRes.success) {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        setRevenueData(revenueRes.data.map(item => ({
+          name: days[new Date(item.date).getDay()],
+          revenue: item.revenue,
+          orders: item.orders
+        })));
+      }
+
+      // Transform category data with colors
+      if (categoryRes.success) {
+        setCategoryData(categoryRes.data.map((item, index) => ({
+          name: item.category || 'Uncategorized',
+          value: item.count,
+          color: categoryColors[index % categoryColors.length]
+        })));
+      }
+
+      // Transform recent orders
+      if (ordersRes.success) {
+        setRecentOrders(ordersRes.data.map(order => ({
+          id: `#${order.orderNumber || order._id?.slice(-6)}`,
+          customer: order.user?.name || order.customerName || 'Unknown',
+          product: order.items?.[0]?.product?.name || order.items?.[0]?.name || 'Multiple Items',
+          amount: `pkr${order.totalAmount?.toLocaleString() || 0}`,
+          status: order.status,
+          date: new Date(order.createdAt).toLocaleDateString()
+        })));
+      }
+
+      // Transform top products
+      if (productsRes.success) {
+        setTopProducts(productsRes.data.map((item, index) => ({
+          id: item.product?._id || index + 1,
+          name: item.product?.name || 'Unknown Product',
+          sales: item.sales,
+          revenue: `pkr${item.revenue?.toLocaleString() || 0}`,
+          trend: '+5%'
+        })));
+      }
+
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [timeRange]);
 
-  // Revenue chart data
-  const revenueData = [
-    { name: 'Mon', revenue: 4000, orders: 24 },
-    { name: 'Tue', revenue: 3000, orders: 18 },
-    { name: 'Wed', revenue: 5000, orders: 35 },
-    { name: 'Thu', revenue: 2780, orders: 22 },
-    { name: 'Fri', revenue: 1890, orders: 15 },
-    { name: 'Sat', revenue: 2390, orders: 20 },
-    { name: 'Sun', revenue: 3490, orders: 28 }
-  ];
-
-  // Category distribution
-  const categoryData = [
-    { name: 'Electronics', value: 35, color: '#3b82f6' },
-    { name: 'Clothing', value: 25, color: '#10b981' },
-    { name: 'Home & Garden', value: 20, color: '#f59e0b' },
-    { name: 'Sports', value: 12, color: '#8b5cf6' },
-    { name: 'Other', value: 8, color: '#6b7280' }
-  ];
-
-  // Recent orders
-  const recentOrders = [
-    { id: '#1234', customer: 'John Doe', product: 'iPhone 15 Pro', amount: 'pkr999', status: 'completed', date: '2 hours ago' },
-    { id: '#1235', customer: 'Jane Smith', product: 'MacBook Air', amount: 'pkr1,299', status: 'processing', date: '3 hours ago' },
-    { id: '#1236', customer: 'Bob Wilson', product: 'AirPods Pro', amount: 'pkr249', status: 'pending', date: '5 hours ago' },
-    { id: '#1237', customer: 'Alice Brown', product: 'iPad Mini', amount: 'pkr599', status: 'completed', date: '6 hours ago' },
-    { id: '#1238', customer: 'Charlie Davis', product: 'Watch Ultra', amount: 'pkr799', status: 'delivered', date: '8 hours ago' }
-  ];
-
-  // Top products
-  const topProducts = [
-    { id: 1, name: 'iPhone 15 Pro', sales: 234, revenue: 'pkr234,000', trend: '+15%' },
-    { id: 2, name: 'MacBook Air M2', sales: 189, revenue: 'pkr245,000', trend: '+8%' },
-    { id: 3, name: 'AirPods Pro', sales: 456, revenue: 'pkr113,000', trend: '+22%' },
-    { id: 4, name: 'iPad Pro', sales: 167, revenue: 'pkr167,000', trend: '+5%' },
-    { id: 5, name: 'Apple Watch', sales: 234, revenue: 'pkr70,000', trend: '+12%' }
-  ];
+  // Fetch data on component mount and when timeRange changes
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const getStatusClass = (status) => {
     const statusMap = {
@@ -95,8 +147,46 @@ const Overview = () => {
       'delivered': 'completed',
       'cancelled': 'cancelled'
     };
-    return statusMap[status] || '';
+    return statusMap[status?.toLowerCase()] || '';
   };
+
+  if (loading) {
+    return (
+      <div className="overview-page animate-fade-in">
+        <div className="page-header">
+          <div className="page-header-left">
+            <h1 className="page-title">Dashboard Overview</h1>
+            <p className="page-subtitle">Welcome back! Here's what's happening with your store.</p>
+          </div>
+        </div>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="overview-page animate-fade-in">
+        <div className="page-header">
+          <div className="page-header-left">
+            <h1 className="page-title">Dashboard Overview</h1>
+            <p className="page-subtitle">Welcome back! Here's what's happening with your store.</p>
+          </div>
+        </div>
+        <div className="error-container">
+          <AlertCircle size={48} className="error-icon" />
+          <p>{error}</p>
+          <button className="btn btn-primary" onClick={fetchDashboardData}>
+            <RefreshCw size={16} />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="overview-page animate-fade-in">
@@ -117,9 +207,9 @@ const Overview = () => {
             <option value="90d">Last 90 days</option>
             <option value="1y">Last year</option>
           </select>
-          <button className="btn btn-secondary">
-            <Download size={16} />
-            Export
+          <button className="btn btn-secondary" onClick={fetchDashboardData}>
+            <RefreshCw size={16} />
+            Refresh
           </button>
           <button className="btn btn-primary">
             <Plus size={16} />
@@ -228,7 +318,7 @@ const Overview = () => {
                     border: '1px solid #e5e7eb',
                     borderRadius: '0.5rem'
                   }}
-                  formatter={(value) => [`${value}%`, 'Share']}
+                  formatter={(value) => [`${value}`, 'Products']}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -237,7 +327,7 @@ const Overview = () => {
                 <div key={category.name} className="legend-item">
                   <span className="legend-color" style={{ backgroundColor: category.color }}></span>
                   <span className="legend-label">{category.name}</span>
-                  <span className="legend-value">{category.value}%</span>
+                  <span className="legend-value">{category.value}</span>
                 </div>
               ))}
             </div>
@@ -264,20 +354,26 @@ const Overview = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>
-                      <span className="order-id">{order.id}</span>
-                    </td>
-                    <td>{order.customer}</td>
-                    <td className="amount">{order.amount}</td>
-                    <td>
-                      <span className={`status-badge ${getStatusClass(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
+                {recentOrders.length > 0 ? (
+                  recentOrders.map((order) => (
+                    <tr key={order.id}>
+                      <td>
+                        <span className="order-id">{order.id}</span>
+                      </td>
+                      <td>{order.customer}</td>
+                      <td className="amount">{order.amount}</td>
+                      <td>
+                        <span className={`status-badge ${getStatusClass(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="no-data">No recent orders</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -290,19 +386,23 @@ const Overview = () => {
             <button className="btn btn-secondary btn-sm">View All</button>
           </div>
           <div className="top-products-list">
-            {topProducts.map((product, index) => (
-              <div key={product.id} className="top-product-item">
-                <span className="product-rank">{index + 1}</span>
-                <div className="product-info">
-                  <span className="product-name">{product.name}</span>
-                  <span className="product-sales">{product.sales} sales</span>
+            {topProducts.length > 0 ? (
+              topProducts.map((product, index) => (
+                <div key={product.id} className="top-product-item">
+                  <span className="product-rank">{index + 1}</span>
+                  <div className="product-info">
+                    <span className="product-name">{product.name}</span>
+                    <span className="product-sales">{product.sales} sales</span>
+                  </div>
+                  <div className="product-stats">
+                    <span className="product-revenue">{product.revenue}</span>
+                    <span className="product-trend positive">{product.trend}</span>
+                  </div>
                 </div>
-                <div className="product-stats">
-                  <span className="product-revenue">{product.revenue}</span>
-                  <span className="product-trend positive">{product.trend}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="no-data">No top products data</div>
+            )}
           </div>
         </div>
       </div>
@@ -311,4 +411,3 @@ const Overview = () => {
 };
 
 export default Overview;
-

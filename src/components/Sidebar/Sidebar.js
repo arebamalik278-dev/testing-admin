@@ -24,8 +24,7 @@ const Sidebar = ({ currentPage, setCurrentPage, isMobileOpen, setIsMobileOpen })
       children: [
         { name: 'Product List', id: 'product-list', icon: Package },
         { name: 'Inventory Control', id: 'inventory-control', icon: Database },
-        { name: 'Categories', id: 'categories', icon: Tag },
-        { name: 'Media Uploads', id: 'media-uploads', icon: ImageIcon }
+        { name: 'Categories', id: 'categories', icon: Tag }
       ]
     },
     {

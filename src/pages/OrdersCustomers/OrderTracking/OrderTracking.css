@@ -72,6 +72,16 @@
   color: #374151;
 }
 
+.status-cancelled {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-refunded {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
 .btn-download {
   color: #059669;
   background-color: transparent;

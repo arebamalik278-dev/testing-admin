@@ -1,27 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, DollarSign, Clock, CheckCircle, XCircle, 
   Search, Download, Send, Eye, Filter, Calendar,
   ChevronDown, Printer, MoreHorizontal, X, Plus
 } from 'lucide-react';
 import './Invoicing.css';
+import api from '../../../api/api';
 
 const Invoicing = () => {
-  const [invoices, setInvoices] = useState([
-    { id: 'INV-001', orderId: '#1234', customer: { name: 'John Doe', email: 'john.doe@email.com' }, date: '2024-01-15', dueDate: '2024-01-30', amount: 999.00, status: 'paid', items: [{ description: 'iPhone 15 Pro', quantity: 1, price: 999.00 }] },
-    { id: 'INV-002', orderId: '#1235', customer: { name: 'Jane Smith', email: 'jane.smith@email.com' }, date: '2024-01-14', dueDate: '2024-01-29', amount: 2499.00, status: 'pending', items: [{ description: 'MacBook Air M3', quantity: 1, price: 1099.00 }, { description: 'AirPods Pro 2', quantity: 2, price: 498.00 }, { description: 'USB-C Hub', quantity: 2, price: 199.00 }] },
-    { id: 'INV-003', orderId: '#1236', customer: { name: 'Mike Johnson', email: 'mike.j@email.com' }, date: '2024-01-13', dueDate: '2024-01-28', amount: 1847.00, status: 'overdue', items: [{ description: 'iPad Pro 12.9"', quantity: 1, price: 1099.00 }, { description: 'Apple Pencil', quantity: 1, price: 129.00 }, { description: 'Smart Keyboard', quantity: 1, price: 349.00 }] },
-    { id: 'INV-004', orderId: '#1237', customer: { name: 'Sarah Wilson', email: 'sarah.w@email.com' }, date: '2024-01-12', dueDate: '2024-01-27', amount: 799.00, status: 'paid', items: [{ description: 'Apple Watch Ultra', quantity: 1, price: 799.00 }] },
-    { id: 'INV-005', orderId: '#1238', customer: { name: 'Tom Brown', email: 'tom.b@email.com' }, date: '2024-01-11', dueDate: '2024-01-26', amount: 349.00, status: 'pending', items: [{ description: 'Nintendo Switch OLED', quantity: 1, price: 349.00 }] },
-    { id: 'INV-006', orderId: '#1239', customer: { name: 'Emily Davis', email: 'emily.d@email.com' }, date: '2024-01-10', dueDate: '2024-01-25', amount: 1348.00, status: 'paid', items: [{ description: 'Sony WH-1000XM5', quantity: 2, price: 698.00 }, { description: 'Phone Case', quantity: 2, price: 49.00 }] },
-    { id: 'INV-007', orderId: '#1240', customer: { name: 'Chris Lee', email: 'chris.l@email.com' }, date: '2024-01-09', dueDate: '2024-01-24', amount: 5499.00, status: 'overdue', items: [{ description: 'iPhone 15 Pro Max', quantity: 1, price: 1199.00 }, { description: 'iPad Pro 11"', quantity: 2, price: 1598.00 }, { description: 'Apple Pencil x2', quantity: 2, price: 258.00 }] },
-    { id: 'INV-008', orderId: '#1241', customer: { name: 'Amanda Taylor', email: 'amanda.t@email.com' }, date: '2024-01-08', dueDate: '2024-01-23', amount: 2198.00, status: 'pending', items: [{ description: 'MacBook Pro 14"', quantity: 1, price: 1999.00 }, { description: 'Dongle Adapter', quantity: 1, price: 79.00 }] }
-  ]);
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
+  // Fetch orders from backend
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/orders');
+        
+        // Check if orders data exists and is an array
+        if (response.data && Array.isArray(response.data)) {
+          // Transform orders to invoice format
+          const transformedInvoices = response.data.map(order => ({
+            id: `INV-${order.orderNumber.split('-').pop()}`,
+            orderId: order.orderNumber,
+            customer: { 
+              name: order.user?.name || 'Unknown Customer', 
+              email: order.user?.email || 'unknown@example.com' 
+            },
+            date: new Date(order.createdAt).toISOString().split('T')[0],
+            dueDate: new Date(order.createdAt.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            amount: order.grandTotal,
+            status: getInvoiceStatus(order.status, order.paymentInfo?.status),
+            items: order.items.map(item => ({
+              description: item.name,
+              quantity: item.quantity,
+              price: item.price
+            }))
+          }));
+          setInvoices(transformedInvoices);
+        } else {
+          // If no data or invalid format, set to empty array
+          setInvoices([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+        // Don't set error state for no data, just set empty array
+        setInvoices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Helper function to determine invoice status
+  const getInvoiceStatus = (orderStatus, paymentStatus) => {
+    if (paymentStatus === 'Completed') {
+      return 'paid';
+    }
+    if (orderStatus === 'Cancelled' || orderStatus === 'Refunded') {
+      return 'cancelled';
+    }
+    // Check if due date has passed
+    const orderDate = new Date(); // This would be order.createdAt in real scenario
+    const dueDate = new Date(orderDate.getTime() + 15 * 24 * 60 * 60 * 1000);
+    if (new Date() > dueDate) {
+      return 'overdue';
+    }
+    return 'pending';
+  };
 
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = 
@@ -72,6 +126,20 @@ const Invoicing = () => {
     setSelectedInvoice(invoice);
     setShowInvoiceModal(true);
   };
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="invoicing-container animate-fade-in">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading invoices...</p>
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="invoicing-container animate-fade-in">
@@ -177,51 +245,63 @@ const Invoicing = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredInvoices.map(invoice => (
-                <tr key={invoice.id}>
-                  <td>
-                    <span className="invoice-id">{invoice.id}</span>
-                  </td>
-                  <td>
-                    <span className="order-link">{invoice.orderId}</span>
-                  </td>
-                  <td>
-                    <div className="customer-info">
-                      <span className="customer-name">{invoice.customer.name}</span>
-                      <span className="customer-email">{invoice.customer.email}</span>
-                    </div>
-                  </td>
-                  <td>{invoice.date}</td>
-                  <td>{invoice.dueDate}</td>
-                  <td>
-                    <span className="amount">{`pkr${invoice.amount.toLocaleString()}`}</span>
-                  </td>
-                  <td>{getStatusBadge(invoice.status)}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="btn-icon btn-view" 
-                        title="View Invoice"
-                        onClick={() => viewInvoice(invoice)}
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button 
-                        className="btn-icon btn-send" 
-                        title="Send Invoice"
-                      >
-                        <Send size={16} />
-                      </button>
-                      <button 
-                        className="btn-icon btn-download" 
-                        title="Download PDF"
-                      >
-                        <Download size={16} />
-                      </button>
+              {filteredInvoices.length > 0 ? (
+                filteredInvoices.map(invoice => (
+                  <tr key={invoice.id}>
+                    <td>
+                      <span className="invoice-id">{invoice.id}</span>
+                    </td>
+                    <td>
+                      <span className="order-link">{invoice.orderId}</span>
+                    </td>
+                    <td>
+                      <div className="customer-info">
+                        <span className="customer-name">{invoice.customer.name}</span>
+                        <span className="customer-email">{invoice.customer.email}</span>
+                      </div>
+                    </td>
+                    <td>{invoice.date}</td>
+                    <td>{invoice.dueDate}</td>
+                    <td>
+                      <span className="amount">{`pkr${invoice.amount.toLocaleString()}`}</span>
+                    </td>
+                    <td>{getStatusBadge(invoice.status)}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <button 
+                          className="btn-icon btn-view" 
+                          title="View Invoice"
+                          onClick={() => viewInvoice(invoice)}
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button 
+                          className="btn-icon btn-send" 
+                          title="Send Invoice"
+                        >
+                          <Send size={16} />
+                        </button>
+                        <button 
+                          className="btn-icon btn-download" 
+                          title="Download PDF"
+                        >
+                          <Download size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="no-data">
+                    <div className="no-data-content">
+                      <FileText size={48} className="no-data-icon" />
+                      <p>No invoices found</p>
+                      <p className="no-data-subtitle">Try adjusting your search or filter criteria</p>
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

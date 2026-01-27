@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar/Sidebar';
 import Navbar from './components/Navbar/Navbar';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+
+// Login Page
+import Login from './pages/Login/Login';
 
 // Dashboard Pages
 import Overview from './pages/Dashboard/Overview/Overview';
@@ -14,7 +17,7 @@ import TopProducts from './pages/Dashboard/TopProducts/TopProducts';
 import ProductList from './pages/Products/ProductList/ProductList';
 import Categories from './pages/Products/Categories/Categories';
 import InventoryControl from './pages/Products/InventoryControl/InventoryControl';
-import MediaUploads from './pages/Products/MediaUploads/MediaUploads';
+
 
 // Orders & Customers Pages
 import OrderTracking from './pages/OrdersCustomers/OrderTracking/OrderTracking';
@@ -33,9 +36,11 @@ const AppLayout = () => {
   const [currentPage, setCurrentPage] = useState('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handlePageChange = (pageId) => {
     setCurrentPage(pageId);
+    navigate(`/${pageId}`); // Update URL when page changes
   };
 
   const renderPage = () => {
@@ -58,8 +63,6 @@ const AppLayout = () => {
         return <InventoryControl />;
       case 'categories':
         return <Categories />;
-      case 'media-uploads':
-        return <MediaUploads />;
       case 'invoicing':
         return <Invoicing />;
       case 'customer-database':
@@ -76,13 +79,18 @@ const AppLayout = () => {
   // Handle direct route navigation
   useEffect(() => {
     const path = location.pathname.substring(1) || 'overview';
-    if (['overview', 'analytics', 'product-list', 'order-tracking', 'settings',
+    const validPages = ['overview', 'analytics', 'product-list', 'order-tracking', 'settings',
          'recent-activity', 'top-products', 'inventory-control', 'categories',
-         'media-uploads', 'invoicing', 'customer-database', 'banners-carousels',
-         'payment-shipping'].includes(path)) {
+         'invoicing', 'customer-database', 'banners-carousels',
+         'payment-shipping'];
+          
+    if (validPages.includes(path)) {
       setCurrentPage(path);
+    } else {
+      // Redirect to overview if invalid path
+      navigate('/overview');
     }
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   return (
     <div className="app-container">
@@ -109,6 +117,9 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Public Login Route */}
+        <Route path="/login" element={<Login />} />
+
         {/* Protected Routes */}
         <Route
           path="/*"
@@ -119,12 +130,11 @@ const App = () => {
           }
         /> 
 
-        {/* Redirect root to dashboard */}
-        <Route path="/" element={<Navigate to="/overview" replace />} />
+        {/* Redirect root to login page */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
 };
 
 export default App;
-
